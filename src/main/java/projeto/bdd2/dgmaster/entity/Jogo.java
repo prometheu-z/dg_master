@@ -1,0 +1,22 @@
+package projeto.bdd2.dgmaster.entity;
+
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity @Table(name = "jogo") @Getter @Setter @NoArgsConstructor
+public class Jogo {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Integer codigoJogo;
+    @Column(nullable = false, length = 150) private String nome;
+    @Column(length = 100) private String categoria;
+    @Column(length = 100) private String genero;
+    private Integer faixaEtariaRecomendada;
+    private Integer quantidadeEstoque = 0;
+    private boolean statusDisponibilidade = true;
+    @ManyToOne @JoinColumn(name = "gerente_id") private Gerente gerente;
+    @ManyToMany @JoinTable(name = "contem", joinColumns = @JoinColumn(name = "jogo_codigo"), inverseJoinColumns = @JoinColumn(name = "aluguel_id"))
+    private List<AluguelReserva> alugueis = new ArrayList<>();
+}
