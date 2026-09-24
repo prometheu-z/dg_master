@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: dgmaster
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/db_master?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: root
+    password: "G0rg0nz0l@"
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
