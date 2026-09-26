@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Catalogo | DG Master</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<header class="topbar">
+    <a class="brand" th:href="@{/catalogo}"><span class="brand-mark">DG</span><span>MASTER</span></a>
+    <nav class="nav-actions">
+        <a class="nav-link is-current" th:href="@{/catalogo}">Catalogo</a>
+        <a class="nav-link" th:if="${cliente}" th:href="@{/cliente}">Minha conta</a>
+        <a class="nav-link" th:if="${principal != null and principal.tipo == 'GERENTE'}" th:href="@{/gerente}">Gerencia</a>
+        <a class="button button-outline button-small" th:if="${principal == null}" th:href="@{/login}">Entrar</a>
+        <form th:if="${principal != null}" th:action="@{/logout}" method="post" class="inline-form">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button class="button button-outline button-small" type="submit">Sair</button>
+        </form>
+    </nav>
+</header>
+<main class="page-shell">
+    <section class="catalog-intro">
+        <div>
+            <p class="eyebrow">ACERVO DG MASTER <span class="eyebrow-dot"></span> RETIRADA NA LOJA</p>
+            <h1>Escolha o jogo.<br><em>Reúna a mesa.</em></h1>
+            <p class="intro-copy">Jogos para descobrir juntos, de partidas leves a estrategias que pedem replay.</p>
+        </div>
+        <div class="intro-index"><span>01 — 04</span><strong>Até quatro<br>jogos por titular</strong></div>
+    </section>
+
+    <div class="notice notice-success" th:if="${sucesso}" th:text="${sucesso}"></div>
+    <div class="notice notice-error" th:if="${erro}" th:text="${erro}"></div>
+
+    <form class="filter-bar" method="get" th:action="@{/catalogo}">
+        <div class="filter-heading"><span class="eyebrow">ENCONTRE SEU PROXIMO JOGO</span><span class="result-count" th:text="${#lists.size(jogos)} + ' resultados'"></span></div>
+        <div class="filter-fields">
+            <label>Categoria
+                <input name="categoria" th:value="${categoria}" placeholder="Estrategia, familia...">
+            </label>
+            <label>Genero
+                <input name="genero" th:value="${genero}" placeholder="Cooperativo, cartas...">
+            </label>
+            <label>Idade maxima
+                <input name="faixaEtaria" type="number" min="0" th:value="${faixaEtaria}" placeholder="Qualquer idade">
+            </label>
+            <button class="button button-dark" type="submit">Filtrar</button>
+            <a class="clear-link" th:href="@{/catalogo}">Limpar</a>
+        </div>
+    </form>
+
+    <form th:if="${cliente}" method="post" th:action="@{/catalogo/reservar}" class="catalog-form">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <div class="reserve-bar">
+            <label for="idDependente">Esta reserva e para quem?</label>
+            <select id="idDependente" name="idDependente">
+                <option value="">Para mim</option>
+                <option th:each="dependente : ${dependentes}"
+                        th:value="${dependente.idDependente}"
+                        th:text="${dependente.nome}"></option>
+            </select>
+            <button class="button button-primary" type="submit">Reservar selecionados</button>
+        </div>
+        <div class="game-list" th:if="${!#lists.isEmpty(jogos)}">
+            <article class="game-row" th:each="jogo, iter : ${jogos}">
+                <label class="game-select" th:for="${'game-' + jogo.codigoJogo}">
+                    <input type="checkbox" name="idsJogos" th:id="${'game-' + jogo.codigoJogo}" th:value="${jogo.codigoJogo}">
+                    <span class="checkmark"></span>
+                </label>
+                <span class="game-number" th:text="${#numbers.formatInteger(iter.count, 2)}"></span>
+                <div class="game-main">
+                    <h2 th:text="${jogo.nome}"></h2>
+                    <p><span th:text="${jogo.categoria}"></span><span class="meta-separator">/</span><span th:text="${jogo.genero}"></span></p>
+                </div>
+                <div class="game-age" th:if="${jogo.faixaEtariaRecomendada != null}"><span>LIVRE A PARTIR DE</span><strong th:text="${jogo.faixaEtariaRecomendada} + '+'"></strong></div>
+                <div class="game-stock"><span th:class="${jogo.statusDisponibilidade ? 'stock-dot available' : 'stock-dot'}"></span><span th:text="${jogo.statusDisponibilidade ? 'Disponivel' : 'Indisponivel'}"></span></div>
+                <strong class="game-price" th:text="${'R$ ' + #numbers.formatDecimal(jogo.precoLocacao, 1, 'POINT', 2, 'COMMA')}"></strong>
+            </article>
+        </div>
+        <div class="empty-state" th:if="${#lists.isEmpty(jogos)}"><span class="empty-mark">—</span><h2>Nenhum jogo encontrado</h2><p>Tente remover um filtro ou buscar por outro genero.</p></div>
+    </form>
+
+    <div th:unless="${cliente}" class="game-list public-game-list" th:if="${!#lists.isEmpty(jogos)}">
+        <article class="game-row" th:each="jogo, iter : ${jogos}">
+            <span class="game-number" th:text="${#numbers.formatInteger(iter.count, 2)}"></span>
+            <div class="game-main"><h2 th:text="${jogo.nome}"></h2><p><span th:text="${jogo.categoria}"></span><span class="meta-separator">/</span><span th:text="${jogo.genero}"></span></p></div>
+            <div class="game-age" th:if="${jogo.faixaEtariaRecomendada != null}"><span>IDADE</span><strong th:text="${jogo.faixaEtariaRecomendada} + '+'"></strong></div>
+            <div class="game-stock"><span th:class="${jogo.statusDisponibilidade ? 'stock-dot available' : 'stock-dot'}"></span><span th:text="${jogo.statusDisponibilidade ? 'Disponivel' : 'Indisponivel'}"></span></div>
+            <strong class="game-price" th:text="${'R$ ' + #numbers.formatDecimal(jogo.precoLocacao, 1, 'POINT', 2, 'COMMA')}"></strong>
+        </article>
+        <div class="visitor-cta"><span>Pronto para reservar?</span><a th:href="@{/login}">Entre na sua conta <span aria-hidden="true">→</span></a></div>
+    </div>
+    <div class="empty-state" th:if="${!cliente and #lists.isEmpty(jogos)}"><span class="empty-mark">—</span><h2>Nenhum jogo encontrado</h2><p>Tente remover um filtro ou buscar por outro genero.</p></div>
+</main>
+<footer class="site-footer"><span>DG MASTER</span><span>Jogos de tabuleiro para a sua proxima reuniao.</span></footer>
+</body>
+</html>

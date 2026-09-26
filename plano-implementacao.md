@@ -66,11 +66,11 @@
 
 7. Camada de Apresentação e Notificação
 
- • [ ] Criar templates Thymeleaf com Bootstrap para usuários e gerentes.
- • [ ] Implementar catálogo responsivo com filtros.
- • [ ] Implementar telas de cadastro, login, reservas, aluguéis e devoluções.
- • [ ] Integrar Spring Boot Starter Mail com Mailtrap para desenvolvimento e testes.
- • [ ] Enviar notificações de confirmação, expiração de reserva e atraso/penalidade.
+ • [x] Criar templates Thymeleaf responsivos para clientes e gerentes.
+ • [x] Implementar catálogo responsivo com filtros e seleção do perfil titular/dependente.
+ • [x] Implementar telas de cadastro, login, reservas, aluguéis, devoluções e baixa de multas.
+ • [x] Manter e-mail/notificações fora do MVP, conforme decisão de escopo.
+ • [x] Implementar painel operacional do Gerente para jogos, prazos e multas.
  • [ ] Criar dashboard e relatórios estatísticos do Gerente (RF10).
 
 8. Testes e Qualidade

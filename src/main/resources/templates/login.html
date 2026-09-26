@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Entrar | DG Master</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body class="auth-page">
+<header class="topbar topbar-light">
+    <a class="brand" th:href="@{/catalogo}"><span class="brand-mark">DG</span><span>MASTER</span></a>
+    <a class="nav-link" th:href="@{/catalogo}">Explorar catálogo</a>
+</header>
+<main class="auth-layout">
+    <section class="auth-story">
+        <p class="eyebrow">CLUBE DE JOGOS DE TABULEIRO</p>
+        <h1>A próxima noite de jogo começa aqui.</h1>
+        <p>Entre para reservar jogos, acompanhar retiradas e cuidar dos perfis da sua família.</p>
+        <div class="story-rule"><span>01</span><span>Escolha o jogo. Reúna a mesa.</span></div>
+    </section>
+    <section class="auth-panel">
+        <p class="eyebrow">BEM-VINDO DE VOLTA</p>
+        <h2>Entrar na conta</h2>
+        <p class="muted">Use seu e-mail e senha cadastrados.</p>
+        <div class="notice notice-error" th:if="${param.error}">E-mail ou senha inválidos.</div>
+        <div class="notice notice-success" th:if="${param.logout}">Você saiu da sua conta.</div>
+        <div class="notice notice-success" th:if="${sucesso}" th:text="${sucesso}"></div>
+        <form th:action="@{/login}" method="post" class="form-stack">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <label for="username">E-mail</label>
+            <input id="username" name="username" type="email" autocomplete="username" required>
+            <label for="password">Senha</label>
+            <input id="password" name="password" type="password" autocomplete="current-password" required>
+            <button class="button button-primary button-wide" type="submit">Entrar</button>
+        </form>
+        <p class="form-foot">Ainda não tem cadastro? <a th:href="@{/cadastro}">Criar conta de cliente</a></p>
+    </section>
+</main>
+</body>
+</html>

@@ -33,9 +33,9 @@ Internamente, o back-end segue o padrão MVC adaptado ao modelo de camadas do Sp
 
 ### 2.2. Front-End
 
-Thymeleaf (motor de templates server-side nativo do Spring Boot) + Bootstrap para estilização e responsividade, sem SPA.
+Thymeleaf (motor de templates server-side nativo do Spring Boot) + CSS responsivo do projeto, sem SPA.
 
-Essa escolha concentra toda a aplicação em uma única stack de linguagem, eliminando a necessidade de um projeto front-end separado (build tools, gerenciador de pacotes, CORS, deploy independente) — vantajoso para um grupo pequeno com prazo definido. O Bootstrap atende ao requisito de responsividade (RNF02), permitindo que catálogo e telas administrativas se adaptem a diferentes dispositivos sem CSS customizado adicional.
+Essa escolha concentra toda a aplicação em uma única stack de linguagem, eliminando a necessidade de um projeto front-end separado (build tools, gerenciador de pacotes, CORS, deploy independente). O CSS próprio usa Grid/Flex e breakpoints para adaptar catálogo e telas administrativas a diferentes dispositivos.
 
 ### 2.3. Back-End e Linguagem de Programação
 
@@ -142,7 +142,7 @@ Não estão previstas, neste primeiro momento, integrações com APIs de terceir
 | Cód. | Tipo | Descrição | Implementação sugerida |
 |---|---|---|---|
 | RNF01 | Segurança | Dados armazenados e transmitidos de forma criptografada e operações autenticadas protegidas contra CSRF e fixação de sessão | HTTPS/TLS em produção; senha com `BCryptPasswordEncoder`; token CSRF em operações de escrita; salvar o contexto autenticado em sessão e rotacionar o ID no login |
-| RNF02 | Usabilidade | Interface responsiva | Bootstrap (grid + componentes responsivos) |
+| RNF02 | Usabilidade | Interface responsiva | Templates Thymeleaf com CSS responsivo (Grid/Flex e breakpoints) |
 | RNF03 | Segurança | Autenticação de dois fatores (2FA) opcional | Fora do escopo do MVP; manter como evolução futura antes de habilitar qualquer confirmação 2FA no login |
 | RNF04 | Compatibilidade/Escalabilidade | Suportar usuários simultâneos mantendo desempenho em operações críticas | Índices em CPF/e-mail, connection pool (HikariCP), paginação nas listagens |
 | RNF05 | Produto | Catálogo organizado com filtros | Endpoints com query params + índices em `genero`, `faixaEtariaRecomendada` |

@@ -63,7 +63,8 @@ public class SecurityConfig {
             .securityContext(context -> context.securityContextRepository(securityContextRepository()))
                 .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/login", "/css/**", "/js/**", "/webjars/**", "/api/auth/**").permitAll()
+                        .requestMatchers("/", "/login", "/cadastro", "/catalogo", "/catalogo/**",
+                            "/css/**", "/js/**", "/webjars/**", "/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/jogos/**").permitAll()
                         .requestMatchers("/api/gerente/**").hasRole("GERENTE")
                         .requestMatchers("/api/clientes/**", "/api/alugueis/**").hasAnyRole("CLIENTE", "GERENTE")

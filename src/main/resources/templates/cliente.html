@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Minha conta | DG Master</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<header class="topbar">
+    <a class="brand" th:href="@{/catalogo}"><span class="brand-mark">DG</span><span>MASTER</span></a>
+    <nav class="nav-actions"><a class="nav-link" th:href="@{/catalogo}">Catalogo</a><a class="nav-link is-current" th:href="@{/cliente}">Minha conta</a>
+        <form th:action="@{/logout}" method="post" class="inline-form"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button class="button button-outline button-small" type="submit">Sair</button></form>
+    </nav>
+</header>
+<main class="page-shell dashboard-shell">
+    <div class="notice notice-success" th:if="${sucesso}" th:text="${sucesso}"></div>
+    <div class="notice notice-error" th:if="${erro}" th:text="${erro}"></div>
+    <section class="dashboard-heading">
+        <div><p class="eyebrow">AREA DO CLIENTE</p><h1>Ola, <em th:text="${cliente.nome}"></em></h1><p class="intro-copy">Acompanhe seus jogos e os perfis da sua familia.</p></div>
+        <div class="wallet"><span>CREDITO EM CARTEIRA</span><strong th:text="${'R$ ' + #numbers.formatDecimal(cliente.creditoCarteira, 1, 'POINT', 2, 'COMMA')}"></strong></div>
+    </section>
+    <div class="account-alert" th:if="${!cliente.statusConta}"><strong>Conta suspensa</strong><span>Consulte o gerente para verificar multas e prazo de reativacao.</span></div>
+
+    <section class="section-block">
+        <div class="section-title"><div><p class="eyebrow">SEUS ALUGUEIS</p><h2>Reservas e jogos retirados</h2></div><span class="section-count" th:text="${#lists.size(alugueis)} + ' registros'"></span></div>
+        <div class="rental-list" th:if="${!#lists.isEmpty(alugueis)}">
+            <article class="rental-row" th:each="aluguel : ${alugueis}">
+                <div class="rental-head">
+                    <div><span class="rental-id" th:text="${'RESERVA #' + aluguel.idAluguel}"></span><h3 th:text="${aluguel.dependente == null ? 'Titular' : aluguel.dependente.nome}"></h3></div>
+                    <span class="status-pill" th:classappend="${' status-' + #strings.toLowerCase(aluguel.status.name())}" th:text="${aluguel.status}"></span>
+                </div>
+                <div class="rental-games"><span th:each="item : ${aluguel.itensAluguel}" class="rental-game"><span th:text="${item.jogo.nome}"></span><small th:text="${'R$ ' + #numbers.formatDecimal(item.valorUnitarioCobrado, 1, 'POINT', 2, 'COMMA')}"></small></span></div>
+                <div class="rental-meta">
+                    <span th:if="${aluguel.dataLimiteRetirada != null}">Retirar ate <strong th:text="${aluguel.dataLimiteRetirada}"></strong></span>
+                    <span th:if="${aluguel.dataLimiteDevolucao != null}">Devolver ate <strong th:text="${aluguel.dataLimiteDevolucao}"></strong></span>
+                    <span>Total <strong th:text="${'R$ ' + #numbers.formatDecimal(aluguel.valorTotal, 1, 'POINT', 2, 'COMMA')}"></strong></span>
+                </div>
+                <div class="rental-actions">
+                    <form th:if="${aluguel.status.name() == 'RESERVADO'}" th:action="@{'/cliente/alugueis/' + ${aluguel.idAluguel} + '/retirar'}" method="post"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button class="button button-primary button-small" type="submit">Registrar retirada</button></form>
+                    <form th:if="${aluguel.status.name() == 'RESERVADO'}" th:action="@{'/cliente/alugueis/' + ${aluguel.idAluguel} + '/cancelar'}" method="post"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button class="button button-outline button-small" type="submit">Cancelar</button></form>
+                    <form th:if="${aluguel.status.name() == 'RETIRADO' and aluguel.quantidadeRenovacoes == 0}" th:action="@{'/cliente/alugueis/' + ${aluguel.idAluguel} + '/renovar'}" method="post"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button class="button button-outline button-small" type="submit">Renovar por 7 dias</button></form>
+                </div>
+            </article>
+        </div>
+        <div class="empty-state compact" th:if="${#lists.isEmpty(alugueis)}"><h2>Nenhum aluguel por enquanto</h2><p>Explore o acervo e escolha um jogo para sua mesa.</p><a class="text-link" th:href="@{/catalogo}">Abrir catalogo →</a></div>
+    </section>
+
+    <section class="section-block dependent-section">
+        <div class="section-title"><div><p class="eyebrow">PERFIS DA FAMILIA</p><h2>Dependentes</h2></div><span class="section-count" th:text="${#lists.size(dependentes)} + ' perfis'"></span></div>
+        <div class="dependent-layout">
+            <div class="dependent-list" th:if="${!#lists.isEmpty(dependentes)}">
+                <div class="dependent-row" th:each="dependente : ${dependentes}"><span class="dependent-avatar" th:text="${#strings.substring(dependente.nome, 0, 1)}"></span><span><strong th:text="${dependente.nome}"></strong><small th:text="${dependente.dataNascimento}"></small></span></div>
+            </div>
+            <p class="muted" th:if="${#lists.isEmpty(dependentes)}">Cadastre perfis para reservar jogos em nome de dependentes.</p>
+            <form class="dependent-form" th:action="@{/cliente/dependentes}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <label>Nome<input name="nome" maxlength="150" required></label>
+                <label>Nascimento<input name="dataNascimento" type="date" required></label>
+                <button class="button button-dark button-small" type="submit">Adicionar perfil</button>
+            </form>
+        </div>
+    </section>
+</main>
+<footer class="site-footer"><span>DG MASTER</span><span>Seu acervo, acompanhado de ponta a ponta.</span></footer>
+</body>
+</html>

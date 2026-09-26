@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Gestao | DG Master</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<header class="topbar">
+    <a class="brand" th:href="@{/gerente}"><span class="brand-mark">DG</span><span>MASTER</span></a>
+    <nav class="nav-actions"><a class="nav-link" th:href="@{/catalogo}">Ver catalogo</a><a class="nav-link is-current" th:href="@{/gerente}">Gestao</a>
+        <form th:action="@{/logout}" method="post" class="inline-form"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button class="button button-outline button-small" type="submit">Sair</button></form>
+    </nav>
+</header>
+<main class="page-shell dashboard-shell">
+    <div class="notice notice-success" th:if="${sucesso}" th:text="${sucesso}"></div>
+    <div class="notice notice-error" th:if="${erro}" th:text="${erro}"></div>
+    <section class="dashboard-heading manager-heading">
+        <div><p class="eyebrow">OPERACAO DA LOJA</p><h1>Painel <em>gerencial</em></h1><p class="intro-copy">Catalogo, prazos e baixas em um so lugar.</p></div>
+        <div class="metric-strip"><div><strong th:text="${#lists.size(jogos)}"></strong><span>jogos ativos</span></div><div><strong th:text="${#lists.size(prazos)}"></strong><span>prazos em curso</span></div><div><strong th:text="${#lists.size(multas)}"></strong><span>multas pendentes</span></div></div>
+    </section>
+
+    <section class="section-block">
+        <div class="section-title"><div><p class="eyebrow">ACERVO</p><h2>Cadastrar jogo</h2></div></div>
+        <form class="game-create-form" th:action="@{/gerente/jogos}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <label>Nome<input name="nome" maxlength="150" required></label>
+            <label>Categoria<input name="categoria" maxlength="100"></label>
+            <label>Genero<input name="genero" maxlength="100"></label>
+            <label>Idade minima<input name="faixaEtariaRecomendada" type="number" min="0"></label>
+            <label>Locacao (R$)<input name="precoLocacao" type="number" min="0.01" step="0.01" required></label>
+            <label>Reposicao (R$)<input name="valorReposicao" type="number" min="0.01" step="0.01" required></label>
+            <label>Estoque<input name="quantidadeEstoque" type="number" min="0" step="1" value="0" required></label>
+            <button class="button button-primary" type="submit">Adicionar ao acervo</button>
+        </form>
+    </section>
+
+    <section class="section-block">
+        <div class="section-title"><div><p class="eyebrow">CADASTRO ATIVO</p><h2>Jogos do catalogo</h2></div><span class="section-count" th:text="${#lists.size(jogos)} + ' jogos'"></span></div>
+        <div class="admin-game-list" th:if="${!#lists.isEmpty(jogos)}">
+            <article class="admin-game" th:each="jogo : ${jogos}">
+                <div class="admin-game-heading"><div><h3 th:text="${jogo.nome}"></h3><span class="muted" th:text="${jogo.categoria + ' / ' + jogo.genero}"></span></div><span class="stock-label" th:text="${jogo.quantidadeEstoque + ' em estoque'}"></span></div>
+                <form class="admin-edit-form" th:action="@{'/gerente/jogos/' + ${jogo.codigoJogo} + '/atualizar'}" method="post">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <label>Nome<input name="nome" th:value="${jogo.nome}" required></label>
+                    <label>Categoria<input name="categoria" th:value="${jogo.categoria}"></label>
+                    <label>Genero<input name="genero" th:value="${jogo.genero}"></label>
+                    <label>Idade<input name="faixaEtariaRecomendada" type="number" min="0" th:value="${jogo.faixaEtariaRecomendada}"></label>
+                    <label>Locacao<input name="precoLocacao" type="number" min="0.01" step="0.01" th:value="${jogo.precoLocacao}" required></label>
+                    <label>Reposicao<input name="valorReposicao" type="number" min="0.01" step="0.01" th:value="${jogo.valorReposicao}" required></label>
+                    <label>Estoque<input name="quantidadeEstoque" type="number" min="0" th:value="${jogo.quantidadeEstoque}" required></label>
+                    <button class="button button-outline button-small" type="submit">Salvar alteracoes</button>
+                </form>
+                <form class="admin-delete-form" th:action="@{'/gerente/jogos/' + ${jogo.codigoJogo} + '/remover'}" method="post">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <button class="text-button danger-text" type="submit">Remover do catalogo</button>
+                </form>
+            </article>
+        </div>
+    </section>
+
+    <section class="section-block">
+        <div class="section-title"><div><p class="eyebrow">RETIRADAS E DEVOLUCOES</p><h2>Prazos em curso</h2></div></div>
+        <div class="deadline-list" th:if="${!#lists.isEmpty(prazos)}">
+            <article class="deadline-row" th:each="aluguel : ${prazos}">
+                <div><span class="rental-id" th:text="${'ALUGUEL #' + aluguel.idAluguel}"></span><strong th:text="${aluguel.cliente.nome}"></strong><small th:text="${aluguel.itensAluguel.size() + ' jogo(s)'}"></small></div>
+                <span class="status-pill" th:classappend="${' status-' + #strings.toLowerCase(aluguel.status.name())}" th:text="${aluguel.status}"></span>
+                <span class="deadline-date" th:if="${aluguel.status.name() == 'RESERVADO'}" th:text="${'Retirada ate ' + aluguel.dataLimiteRetirada}"></span>
+                <span class="deadline-date" th:if="${aluguel.dataLimiteDevolucao != null}" th:text="${'Devolucao ate ' + aluguel.dataLimiteDevolucao}"></span>
+                <form th:if="${aluguel.status.name() == 'RETIRADO' or aluguel.status.name() == 'ATRASADO'}" th:action="@{'/gerente/alugueis/' + ${aluguel.idAluguel} + '/devolver'}" method="post">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button class="button button-dark button-small" type="submit">Registrar devolucao</button>
+                </form>
+            </article>
+        </div>
+        <p class="muted empty-line" th:if="${#lists.isEmpty(prazos)}">Nenhuma reserva ou aluguel em curso.</p>
+    </section>
+
+    <section class="section-block">
+        <div class="section-title"><div><p class="eyebrow">FINANCEIRO</p><h2>Multas a baixar</h2></div></div>
+        <div class="penalty-list" th:if="${!#lists.isEmpty(multas)}">
+            <article class="penalty-row" th:each="multa : ${multas}">
+                <div><span class="rental-id" th:text="${'ALUGUEL #' + multa.aluguelReserva.idAluguel}"></span><strong th:text="${multa.aluguelReserva.cliente.nome}"></strong><small th:text="${multa.tipoPenalidade}"></small></div>
+                <strong class="game-price" th:text="${'R$ ' + #numbers.formatDecimal(multa.valorMulta, 1, 'POINT', 2, 'COMMA')}"></strong>
+                <span class="deadline-date" th:text="${multa.dataFimSuspensao}"></span>
+                <form th:action="@{'/gerente/penalidades/' + ${multa.idPenalidade} + '/pagamento'}" method="post">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button class="button button-primary button-small" type="submit">Registrar pagamento</button>
+                </form>
+            </article>
+        </div>
+        <p class="muted empty-line" th:if="${#lists.isEmpty(multas)}">Nenhuma multa pendente.</p>
+    </section>
+</main>
+<footer class="site-footer"><span>DG MASTER</span><span>Operacao do acervo e prazos.</span></footer>
+</body>
+</html>
