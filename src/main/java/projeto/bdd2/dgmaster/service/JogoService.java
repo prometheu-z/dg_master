@@ -40,6 +40,18 @@ public class JogoService {
         return jogoRepository.save(jogo);
     }
 
+    @Transactional
+    public Jogo atualizarEstoque(Integer codigoJogo, Integer quantidadeDisponivel) {
+        Jogo jogo = buscarPorId(codigoJogo);
+        if (quantidadeDisponivel == null || quantidadeDisponivel < 0) {
+            throw new IllegalArgumentException("Quantidade de estoque inválida");
+        }
+
+        jogo.setQuantidadeEstoque(quantidadeDisponivel);
+        jogo.setStatusDisponibilidade(quantidadeDisponivel > 0);
+        return jogoRepository.save(jogo);
+    }
+
     @Transactional(readOnly = true)
     public List<Jogo> listarTodos() {
         return jogoRepository.findAll();
