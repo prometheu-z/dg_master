@@ -5,11 +5,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import projeto.bdd2.dgmaster.entity.Cliente;
 import projeto.bdd2.dgmaster.entity.Jogo;
+import projeto.bdd2.dgmaster.repository.AluguelReservaRepository;
 import projeto.bdd2.dgmaster.repository.ClienteRepository;
 import projeto.bdd2.dgmaster.repository.JogoRepository;
 import projeto.bdd2.dgmaster.service.AluguelService;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
@@ -25,6 +27,9 @@ class AluguelReservaIntegrationTest {
 
     @Autowired
     private ClienteRepository clienteRepository;
+
+    @Autowired
+    private AluguelReservaRepository aluguelReservaRepository;
 
     @Autowired
     private JogoRepository jogoRepository;
@@ -127,5 +132,89 @@ class AluguelReservaIntegrationTest {
         assertThatThrownBy(() -> aluguelService.reservar(cliente.getCpf(), ids))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Limite máximo");
+    }
+
+    @Test
+    void shouldExpireUnclaimedReservationAndRestoreGameStock() {
+        Cliente cliente = new Cliente();
+        cliente.setCpf("777888999" + String.format("%02d", Math.abs(UUID.randomUUID().hashCode()) % 90 + 10));
+        cliente.setNome("Cliente Expiração");
+        cliente.setEmail("expiracao." + UUID.randomUUID() + "@teste.com");
+        cliente.setSenha("senha123");
+        cliente.setDataNascimento(LocalDate.of(1990, 1, 1));
+        cliente.setStatusConta(true);
+        clienteRepository.save(cliente);
+
+        Jogo jogo = new Jogo();
+        jogo.setNome("Jogo Expiração " + UUID.randomUUID());
+        jogo.setPrecoLocacao(new BigDecimal("30.00"));
+        jogo.setQuantidadeEstoque(1);
+        jogoRepository.save(jogo);
+
+        var reserva = aluguelService.reservar(cliente.getCpf(), List.of(jogo.getCodigoJogo()));
+        LocalDateTime depoisDoPrazo = reserva.getDataLimiteRetirada().plusSeconds(1);
+
+        int expiradas = aluguelService.expirarReservasVencidas(depoisDoPrazo);
+
+        assertThat(expiradas).isGreaterThanOrEqualTo(1);
+        assertThat(aluguelReservaRepository.findById(reserva.getIdAluguel()).orElseThrow().getStatus())
+                .isEqualTo(projeto.bdd2.dgmaster.entity.StatusAluguel.EXPIRADO);
+        assertThat(jogoRepository.findById(jogo.getCodigoJogo()).orElseThrow().getQuantidadeEstoque()).isEqualTo(1);
+    }
+
+    @Test
+    void shouldCancelReservationAndRestoreGameStock() {
+        Cliente cliente = new Cliente();
+        cliente.setCpf("888999000" + String.format("%02d", Math.abs(UUID.randomUUID().hashCode()) % 90 + 10));
+        cliente.setNome("Cliente Cancelamento");
+        cliente.setEmail("cancelamento." + UUID.randomUUID() + "@teste.com");
+        cliente.setSenha("senha123");
+        cliente.setDataNascimento(LocalDate.of(1991, 3, 1));
+        cliente.setStatusConta(true);
+        clienteRepository.save(cliente);
+
+        Jogo jogo = new Jogo();
+        jogo.setNome("Jogo Cancelamento " + UUID.randomUUID());
+        jogo.setPrecoLocacao(new BigDecimal("30.00"));
+        jogo.setQuantidadeEstoque(1);
+        jogoRepository.save(jogo);
+
+        var reserva = aluguelService.reservar(cliente.getCpf(), List.of(jogo.getCodigoJogo()));
+
+        aluguelService.cancelarReserva(reserva.getIdAluguel());
+
+        assertThat(aluguelReservaRepository.findById(reserva.getIdAluguel()).orElseThrow().getStatus())
+                .isEqualTo(projeto.bdd2.dgmaster.entity.StatusAluguel.CANCELADO);
+        assertThatThrownBy(() -> aluguelService.cancelarReserva(reserva.getIdAluguel()))
+            .isInstanceOf(IllegalStateException.class);
+        assertThat(jogoRepository.findById(jogo.getCodigoJogo()).orElseThrow().getQuantidadeEstoque()).isEqualTo(1);
+    }
+
+    @Test
+    void shouldMarkReservationAsPickedUpWithoutChangingStock() {
+        Cliente cliente = new Cliente();
+        cliente.setCpf("999000111" + String.format("%02d", Math.abs(UUID.randomUUID().hashCode()) % 90 + 10));
+        cliente.setNome("Cliente Retirada");
+        cliente.setEmail("retirada." + UUID.randomUUID() + "@teste.com");
+        cliente.setSenha("senha123");
+        cliente.setDataNascimento(LocalDate.of(1989, 4, 1));
+        cliente.setStatusConta(true);
+        clienteRepository.save(cliente);
+
+        Jogo jogo = new Jogo();
+        jogo.setNome("Jogo Retirada " + UUID.randomUUID());
+        jogo.setPrecoLocacao(new BigDecimal("30.00"));
+        jogo.setQuantidadeEstoque(2);
+        jogoRepository.save(jogo);
+
+        var reserva = aluguelService.reservar(cliente.getCpf(), List.of(jogo.getCodigoJogo()));
+
+        aluguelService.retirarReserva(reserva.getIdAluguel());
+
+        assertThat(aluguelReservaRepository.findById(reserva.getIdAluguel()).orElseThrow().getStatus())
+                .isEqualTo(projeto.bdd2.dgmaster.entity.StatusAluguel.RETIRADO);
+        assertThat(jogoRepository.findById(jogo.getCodigoJogo()).orElseThrow().getQuantidadeEstoque()).isEqualTo(1);
+        assertThatThrownBy(() -> aluguelService.cancelarReserva(reserva.getIdAluguel()))
+                .isInstanceOf(IllegalStateException.class);
     }
 }

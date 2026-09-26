@@ -82,10 +82,64 @@ public class AluguelService {
         for (Jogo jogo : jogos) {
             jogo.setQuantidadeEstoque(jogo.getQuantidadeEstoque() - 1);
             jogo.setStatusDisponibilidade(jogo.getQuantidadeEstoque() > 0);
-            jogoRepository.save(jogo);
         }
 
-        return aluguelReservaRepository.save(aluguel);
+        AluguelReserva reservaSalva = aluguelReservaRepository.save(aluguel);
+        for (Jogo jogo : jogos) {
+            jogo.getAlugueis().add(reservaSalva);
+            jogoRepository.save(jogo);
+        }
+        return reservaSalva;
+    }
+
+    @Transactional
+    public int expirarReservasVencidas(LocalDateTime agora) {
+        List<AluguelReserva> reservasVencidas = aluguelReservaRepository
+                .findByStatusAndDataLimiteRetiradaBefore(StatusAluguel.RESERVADO, agora);
+
+        for (AluguelReserva reserva : reservasVencidas) {
+            reserva.setStatus(StatusAluguel.EXPIRADO);
+            restaurarEstoque(reserva);
+        }
+
+        aluguelReservaRepository.saveAll(reservasVencidas);
+        return reservasVencidas.size();
+    }
+
+    @Transactional
+    public AluguelReserva cancelarReserva(Integer idAluguel) {
+        AluguelReserva reserva = aluguelReservaRepository.findById(idAluguel)
+                .orElseThrow(() -> new IllegalArgumentException("Reserva não encontrada: " + idAluguel));
+        if (reserva.getStatus() != StatusAluguel.RESERVADO) {
+            throw new IllegalStateException("Somente reservas aguardando retirada podem ser canceladas");
+        }
+
+        reserva.setStatus(StatusAluguel.CANCELADO);
+        restaurarEstoque(reserva);
+        return aluguelReservaRepository.save(reserva);
+    }
+
+    @Transactional
+    public AluguelReserva retirarReserva(Integer idAluguel) {
+        AluguelReserva reserva = aluguelReservaRepository.findById(idAluguel)
+                .orElseThrow(() -> new IllegalArgumentException("Reserva não encontrada: " + idAluguel));
+        if (reserva.getStatus() != StatusAluguel.RESERVADO) {
+            throw new IllegalStateException("Somente reservas aguardando retirada podem ser retiradas");
+        }
+        if (reserva.getDataLimiteRetirada().isBefore(LocalDateTime.now())) {
+            throw new IllegalStateException("O prazo para retirada da reserva expirou");
+        }
+
+        reserva.setStatus(StatusAluguel.RETIRADO);
+        return aluguelReservaRepository.save(reserva);
+    }
+
+    private void restaurarEstoque(AluguelReserva reserva) {
+        for (Jogo jogo : reserva.getJogos()) {
+            jogo.setQuantidadeEstoque(jogo.getQuantidadeEstoque() + 1);
+            jogo.setStatusDisponibilidade(true);
+            jogoRepository.save(jogo);
+        }
     }
 
     private double calcularDesconto(int quantidadeJogos) {
