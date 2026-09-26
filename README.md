@@ -87,6 +87,10 @@ docker run --name dgmaster-mysql -e MYSQL_ROOT_PASSWORD=sua_senha -e MYSQL_DATAB
 - **Aplicação**: http://localhost:8080
 - **Swagger UI**: http://localhost:8080/swagger-ui.html
 - **OpenAPI JSON**: http://localhost:8080/v3/api-docs
+- **Cadastro Cliente**: http://localhost:8080/cadastro
+- **Cadastro Gerente (Admin)**: http://localhost:8080/admin
+- **Catálogo**: http://localhost:8080/catalogo
+- **Estatísticas (Gerente)**: http://localhost:8080/gerente/estatisticas
 
 ## 📚 Documentação da API
 
@@ -99,6 +103,7 @@ A documentação interativa da API está disponível através do Swagger UI:
 
 #### Autenticação
 - `POST /api/auth/cadastro` - Cadastro de novo cliente
+- `POST /api/auth/cadastro-gerente` - Cadastro de novo gerente (admin)
 - `POST /api/auth/login` - Login
 
 #### Catálogo
@@ -166,6 +171,12 @@ A documentação interativa da API está disponível através do Swagger UI:
 - [x] Testes unitários para services
 - [x] Configuração Docker
 - [x] Documentação OpenAPI/Swagger
+- [x] Dashboard de estatísticas completas
+- [x] Página de detalhes de jogos específicos
+- [x] Histórico completo de aluguéis (ativos e finalizados)
+- [x] Filtros avançados para gerente (busca por cliente, status)
+- [x] Edição de perfil do cliente
+- [x] Remoção de dependentes
 
 ## 🔒 Segurança
 

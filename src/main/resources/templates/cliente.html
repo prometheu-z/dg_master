@@ -20,12 +20,27 @@
         <div><p class="eyebrow">AREA DO CLIENTE</p><h1>Ola, <em th:text="${cliente.nome}"></em></h1><p class="intro-copy">Acompanhe seus jogos e os perfis da sua familia.</p></div>
         <div class="wallet"><span>CREDITO EM CARTEIRA</span><strong th:text="${'R$ ' + #numbers.formatDecimal(cliente.creditoCarteira, 1, 'POINT', 2, 'COMMA')}"></strong></div>
     </section>
+    
+    <section class="section-block">
+        <div class="section-title">
+            <div>
+                <p class="eyebrow">PERFIL</p>
+                <h2>Seus dados</h2>
+            </div>
+        </div>
+        <form class="dependent-form" th:action="@{/cliente/perfil}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <label>Nome<input name="nome" th:value="${cliente.nome}" maxlength="150" required></label>
+            <label>E-mail<input name="email" th:value="${cliente.email}" type="email" required></label>
+            <button class="button button-dark button-small" type="submit">Atualizar perfil</button>
+        </form>
+    </section>
     <div class="account-alert" th:if="${!cliente.statusConta}"><strong>Conta suspensa</strong><span>Consulte o gerente para verificar multas e prazo de reativacao.</span></div>
 
     <section class="section-block">
-        <div class="section-title"><div><p class="eyebrow">SEUS ALUGUEIS</p><h2>Reservas e jogos retirados</h2></div><span class="section-count" th:text="${#lists.size(alugueis)} + ' registros'"></span></div>
-        <div class="rental-list" th:if="${!#lists.isEmpty(alugueis)}">
-            <article class="rental-row" th:each="aluguel : ${alugueis}">
+        <div class="section-title"><div><p class="eyebrow">SEUS ALUGUEIS</p><h2>Reservas e jogos retirados</h2></div><span class="section-count" th:text="${#lists.size(alugueisAtivos)} + ' ativos'"></span></div>
+        <div class="rental-list" th:if="${!#lists.isEmpty(alugueisAtivos)}">
+            <article class="rental-row" th:each="aluguel : ${alugueisAtivos}">
                 <div class="rental-head">
                     <div><span class="rental-id" th:text="${'RESERVA #' + aluguel.idAluguel}"></span><h3 th:text="${aluguel.dependente == null ? 'Titular' : aluguel.dependente.nome}"></h3></div>
                     <span class="status-pill" th:classappend="${' status-' + #strings.toLowerCase(aluguel.status.name())}" th:text="${aluguel.status}"></span>
@@ -43,14 +58,41 @@
                 </div>
             </article>
         </div>
-        <div class="empty-state compact" th:if="${#lists.isEmpty(alugueis)}"><h2>Nenhum aluguel por enquanto</h2><p>Explore o acervo e escolha um jogo para sua mesa.</p><a class="text-link" th:href="@{/catalogo}">Abrir catalogo →</a></div>
+        <div class="empty-state compact" th:if="${#lists.isEmpty(alugueisAtivos)}"><h2>Nenhum aluguel ativo</h2><p>Explore o acervo e escolha um jogo para sua mesa.</p><a class="text-link" th:href="@{/catalogo}">Abrir catalogo →</a></div>
+    </section>
+
+    <section class="section-block">
+        <div class="section-title"><div><p class="eyebrow">HISTÓRICO</p><h2>Aluguéis anteriores</h2></div><span class="section-count" th:text="${#lists.size(alugueisHistorico)} + ' registros'"></span></div>
+        <div class="rental-list" th:if="${!#lists.isEmpty(alugueisHistorico)}">
+            <article class="rental-row" th:each="aluguel : ${alugueisHistorico}">
+                <div class="rental-head">
+                    <div><span class="rental-id" th:text="${'RESERVA #' + aluguel.idAluguel}"></span><h3 th:text="${aluguel.dependente == null ? 'Titular' : aluguel.dependente.nome}"></h3></div>
+                    <span class="status-pill" th:classappend="${' status-' + #strings.toLowerCase(aluguel.status.name())}" th:text="${aluguel.status}"></span>
+                </div>
+                <div class="rental-games"><span th:each="item : ${aluguel.itensAluguel}" class="rental-game"><span th:text="${item.jogo.nome}"></span><small th:text="${'R$ ' + #numbers.formatDecimal(item.valorUnitarioCobrado, 1, 'POINT', 2, 'COMMA')}"></small></span></div>
+                <div class="rental-meta">
+                    <span th:if="${aluguel.dataDevolucaoReal != null}">Devolvido em <strong th:text="${aluguel.dataDevolucaoReal}"></strong></span>
+                    <span th:if="${aluguel.status.name() == 'EXPIRADO'}">Expirado em <strong th:text="${aluguel.dataLimiteRetirada}"></strong></span>
+                    <span th:if="${aluguel.status.name() == 'CANCELADO'}">Cancelado</span>
+                    <span>Total <strong th:text="${'R$ ' + #numbers.formatDecimal(aluguel.valorTotal, 1, 'POINT', 2, 'COMMA')}"></strong></span>
+                </div>
+            </article>
+        </div>
+        <div class="empty-state compact" th:if="${#lists.isEmpty(alugueisHistorico)}"><h2>Nenhum histórico</h2><p>Seus aluguéis concluídos aparecerão aqui.</p></div>
     </section>
 
     <section class="section-block dependent-section">
         <div class="section-title"><div><p class="eyebrow">PERFIS DA FAMILIA</p><h2>Dependentes</h2></div><span class="section-count" th:text="${#lists.size(dependentes)} + ' perfis'"></span></div>
         <div class="dependent-layout">
             <div class="dependent-list" th:if="${!#lists.isEmpty(dependentes)}">
-                <div class="dependent-row" th:each="dependente : ${dependentes}"><span class="dependent-avatar" th:text="${#strings.substring(dependente.nome, 0, 1)}"></span><span><strong th:text="${dependente.nome}"></strong><small th:text="${dependente.dataNascimento}"></small></span></div>
+                <div class="dependent-row" th:each="dependente : ${dependentes}">
+                    <span class="dependent-avatar" th:text="${#strings.substring(dependente.nome, 0, 1)}"></span>
+                    <span><strong th:text="${dependente.nome}"></strong><small th:text="${dependente.dataNascimento}"></small></span>
+                    <form th:action="@{'/cliente/dependentes/' + ${dependente.idDependente} + '/remover'}" method="post" style="margin-left: auto;">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <button class="button button-outline button-small" type="submit" style="padding: 4px 8px; font-size: 10px;">Remover</button>
+                    </form>
+                </div>
             </div>
             <p class="muted" th:if="${#lists.isEmpty(dependentes)}">Cadastre perfis para reservar jogos em nome de dependentes.</p>
             <form class="dependent-form" th:action="@{/cliente/dependentes}" method="post">

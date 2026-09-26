@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <span th:text="${jogo.nome} + ' | DG Master'"></span>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<header class="topbar">
+    <a class="brand" th:href="@{/catalogo}"><span class="brand-mark">DG</span><span>MASTER</span></a>
+    <nav class="nav-actions">
+        <a class="nav-link" th:href="@{/catalogo}">Voltar ao catálogo</a>
+        <a class="nav-link" th:if="${principal == null}" th:href="@{/login}">Entrar</a>
+        <a class="nav-link" th:if="${principal != null && cliente}" th:href="@{/cliente}">Minha conta</a>
+        <a class="nav-link" th:if="${principal != null && !cliente}" th:href="@{/gerente}">Gestão</a>
+        <form th:if="${principal != null}" th:action="@{/logout}" method="post" class="inline-form">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button class="button button-outline button-small" type="submit">Sair</button>
+        </form>
+    </nav>
+</header>
+<main class="page-shell">
+    <div class="notice notice-success" th:if="${sucesso}" th:text="${sucesso}"></div>
+    <div class="notice notice-error" th:if="${erro}" th:text="${erro}"></div>
+
+    <section class="catalog-intro">
+        <div>
+            <p class="eyebrow">DETALHES DO JOGO</p>
+            <h1 th:text="${jogo.nome}"></h1>
+            <p class="intro-copy">
+                <span th:text="${jogo.categoria}"></span> • 
+                <span th:text="${jogo.genero}"></span> • 
+                <span th:text="${jogo.faixaEtariaRecomendada + '+ anos'}"></span>
+            </p>
+        </div>
+        <div class="intro-index">
+            <span>PREÇO</span>
+            <strong th:text="${'R$ ' + #numbers.formatDecimal(jogo.precoLocacao, 1, 'POINT', 2, 'COMMA')}"></strong>
+            <span>ESTOQUE</span>
+            <strong th:text="${jogo.quantidadeEstoque}"></strong>
+        </div>
+    </section>
+
+    <section class="section-block">
+        <div class="section-title">
+            <div>
+                <p class="eyebrow">INFORMAÇÕES</p>
+                <h2>Detalhes do produto</h2>
+            </div>
+        </div>
+        <div class="game-details">
+            <div class="detail-row">
+                <span class="detail-label">Categoria:</span>
+                <span class="detail-value" th:text="${jogo.categoria}"></span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Gênero:</span>
+                <span class="detail-value" th:text="${jogo.genero}"></span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Faixa etária:</span>
+                <span class="detail-value" th:text="${jogo.faixaEtariaRecomendada + '+ anos'}"></span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Preço de locação:</span>
+                <span class="detail-value" th:text="${'R$ ' + #numbers.formatDecimal(jogo.precoLocacao, 1, 'POINT', 2, 'COMMA')}"></span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Valor de reposição:</span>
+                <span class="detail-value" th:text="${'R$ ' + #numbers.formatDecimal(jogo.valorReposicao, 1, 'POINT', 2, 'COMMA')}"></span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Quantidade em estoque:</span>
+                <span class="detail-value" th:text="${jogo.quantidadeEstoque}"></span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Disponibilidade:</span>
+                <span class="detail-value" th:class="${jogo.statusDisponibilidade ? 'status-available' : 'status-unavailable'}" 
+                      th:text="${jogo.statusDisponibilidade ? 'Disponível' : 'Indisponível'}"></span>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-block" th:if="${cliente && jogo.quantidadeEstoque > 0}">
+        <div class="section-title">
+            <div>
+                <p class="eyebrow">RESERVAR</p>
+                <h2>Adicionar à sua reserva</h2>
+            </div>
+        </div>
+        <form th:action="@{/catalogo/reservar}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <input type="hidden" name="idsJogos" th:value="${jogo.codigoJogo}">
+            
+            <div class="form-group" th:if="${!#lists.isEmpty(dependentes)}">
+                <label for="idDependente">Reservar para:</label>
+                <select id="idDependente" name="idDependente">
+                    <option value="">Titular (você)</option>
+                    <option th:each="dependente : ${dependentes}" 
+                            th:value="${dependente.idDependente}" 
+                            th:text="${dependente.nome}"></option>
+                </select>
+            </div>
+            
+            <button class="button button-primary button-wide" type="submit">Reservar este jogo</button>
+        </form>
+    </section>
+
+    <section class="section-block" th:if="${!cliente}">
+        <div class="visitor-cta">
+            <p>Para reservar jogos, você precisa estar logado como cliente.</p>
+            <a th:href="@{/login}" class="text-link">Fazer login →</a>
+            <a th:href="@{/cadastro}" class="text-link">Criar conta →</a>
+        </div>
+    </section>
+
+    <section class="section-block" th:if="${cliente && jogo.quantidadeEstoque == 0}">
+        <div class="empty-state compact">
+            <h2>Jogo indisponível</h2>
+            <p>Este jogo está temporariamente sem estoque. Volte mais tarde.</p>
+        </div>
+    </section>
+</main>
+<footer class="site-footer"><span>DG MASTER</span><span>Seu acervo, detalhado para você.</span></footer>
+</body>
+</html>

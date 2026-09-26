@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Estatísticas | DG Master</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<header class="topbar">
+    <a class="brand" th:href="@{/gerente}"><span class="brand-mark">DG</span><span>MASTER</span></a>
+    <nav class="nav-actions">
+        <a class="nav-link" th:href="@{/catalogo}">Ver catálogo</a>
+        <a class="nav-link" th:href="@{/gerente}">Gestão</a>
+        <a class="nav-link is-current" th:href="@{/gerente/estatisticas}">Estatísticas</a>
+        <form th:action="@{/logout}" method="post" class="inline-form">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button class="button button-outline button-small" type="submit">Sair</button>
+        </form>
+    </nav>
+</header>
+<main class="page-shell dashboard-shell">
+    <section class="dashboard-heading">
+        <div>
+            <p class="eyebrow">ANÁLISE DE DESEMPENHO</p>
+            <h1>Estatísticas do <em>acervo</em></h1>
+            <p class="intro-copy">Visão geral do desempenho dos jogos e rentabilidade.</p>
+        </div>
+    </section>
+
+    <section class="section-block">
+        <div class="section-title">
+            <div>
+                <p class="eyebrow">MAIS ALUGADOS</p>
+                <h2>Top 10 Jogos mais solicitados</h2>
+            </div>
+            <span class="section-count" th:text="${#lists.size(estatisticas.jogosMaisAlugados)} + ' jogos'"></span>
+        </div>
+        <div class="admin-game-list" th:if="${!#lists.isEmpty(estatisticas.jogosMaisAlugados)}">
+            <article class="admin-game" th:each="jogo : ${estatisticas.jogosMaisAlugados}">
+                <div class="admin-game-heading">
+                    <div>
+                        <h3 th:text="${jogo.nome}"></h3>
+                        <span class="muted" th:text="${jogo.categoria}"></span>
+                    </div>
+                    <div class="metric-strip">
+                        <div>
+                            <strong th:text="${jogo.totalAlugueis}"></strong>
+                            <span>aluguéis</span>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+        <p class="muted empty-line" th:if="${#lists.isEmpty(estatisticas.jogosMaisAlugados)}">Nenhum dado disponível.</p>
+    </section>
+
+    <section class="section-block">
+        <div class="section-title">
+            <div>
+                <p class="eyebrow">MENOS ALUGADOS</p>
+                <h2>Top 10 Jogos menos solicitados</h2>
+            </div>
+            <span class="section-count" th:text="${#lists.size(estatisticas.jogosMenosAlugados)} + ' jogos'"></span>
+        </div>
+        <div class="admin-game-list" th:if="${!#lists.isEmpty(estatisticas.jogosMenosAlugados)}">
+            <article class="admin-game" th:each="jogo : ${estatisticas.jogosMenosAlugados}">
+                <div class="admin-game-heading">
+                    <div>
+                        <h3 th:text="${jogo.nome}"></h3>
+                        <span class="muted" th:text="${jogo.categoria}"></span>
+                    </div>
+                    <div class="metric-strip">
+                        <div>
+                            <strong th:text="${jogo.totalAlugueis}"></strong>
+                            <span>aluguéis</span>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+        <p class="muted empty-line" th:if="${#lists.isEmpty(estatisticas.jogosMenosAlugados)}">Nenhum dado disponível.</p>
+    </section>
+
+    <section class="section-block">
+        <div class="section-title">
+            <div>
+                <p class="eyebrow">MAIS RENTÁVEIS</p>
+                <h2>Top 10 Jogos por receita total</h2>
+            </div>
+            <span class="section-count" th:text="${#lists.size(estatisticas.jogosMaisRentaveis)} + ' jogos'"></span>
+        </div>
+        <div class="admin-game-list" th:if="${!#lists.isEmpty(estatisticas.jogosMaisRentaveis)}">
+            <article class="admin-game" th:each="jogo : ${estatisticas.jogosMaisRentaveis}">
+                <div class="admin-game-heading">
+                    <div>
+                        <h3 th:text="${jogo.nome}"></h3>
+                        <span class="muted" th:text="${jogo.categoria}"></span>
+                    </div>
+                    <div class="metric-strip">
+                        <div>
+                            <strong th:text="${'R$ ' + #numbers.formatDecimal(jogo.receitaTotal, 1, 'POINT', 2, 'COMMA')}"></strong>
+                            <span>receita total</span>
+                        </div>
+                        <div>
+                            <strong th:text="${jogo.totalAlugueis}"></strong>
+                            <span>aluguéis</span>
+                        </div>
+                        <div>
+                            <strong th:text="${'R$ ' + #numbers.formatDecimal(jogo.receitaMediaPorAluguel, 1, 'POINT', 2, 'COMMA')}"></strong>
+                            <span>média/aluguel</span>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+        <p class="muted empty-line" th:if="${#lists.isEmpty(estatisticas.jogosMaisRentaveis)}">Nenhum dado disponível.</p>
+    </section>
+
+    <section class="section-block">
+        <div class="section-title">
+            <div>
+                <p class="eyebrow">MENOS RENTÁVEIS</p>
+                <h2>Top 10 Jogos por menor receita</h2>
+            </div>
+            <span class="section-count" th:text="${#lists.size(estatisticas.jogosMenosRentaveis)} + ' jogos'"></span>
+        </div>
+        <div class="admin-game-list" th:if="${!#lists.isEmpty(estatisticas.jogosMenosRentaveis)}">
+            <article class="admin-game" th:each="jogo : ${estatisticas.jogosMenosRentaveis}">
+                <div class="admin-game-heading">
+                    <div>
+                        <h3 th:text="${jogo.nome}"></h3>
+                        <span class="muted" th:text="${jogo.categoria}"></span>
+                    </div>
+                    <div class="metric-strip">
+                        <div>
+                            <strong th:text="${'R$ ' + #numbers.formatDecimal(jogo.receitaTotal, 1, 'POINT', 2, 'COMMA')}"></strong>
+                            <span>receita total</span>
+                        </div>
+                        <div>
+                            <strong th:text="${jogo.totalAlugueis}"></strong>
+                            <span>aluguéis</span>
+                        </div>
+                        <div>
+                            <strong th:text="${'R$ ' + #numbers.formatDecimal(jogo.receitaMediaPorAluguel, 1, 'POINT', 2, 'COMMA')}"></strong>
+                            <span>média/aluguel</span>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+        <p class="muted empty-line" th:if="${#lists.isEmpty(estatisticas.jogosMenosRentaveis)}">Nenhum dado disponível.</p>
+    </section>
+</main>
+<footer class="site-footer"><span>DG MASTER</span><span>Análise de desempenho e rentabilidade.</span></footer>
+</body>
+</html>

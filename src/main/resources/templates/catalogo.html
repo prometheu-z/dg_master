@@ -70,7 +70,7 @@
                 </label>
                 <span class="game-number" th:text="${#numbers.formatInteger(iter.count, 2)}"></span>
                 <div class="game-main">
-                    <h2 th:text="${jogo.nome}"></h2>
+                    <h2><a th:href="@{'/catalogo/' + ${jogo.codigoJogo}}" th:text="${jogo.nome}"></a></h2>
                     <p><span th:text="${jogo.categoria}"></span><span class="meta-separator">/</span><span th:text="${jogo.genero}"></span></p>
                 </div>
                 <div class="game-age" th:if="${jogo.faixaEtariaRecomendada != null}"><span>LIVRE A PARTIR DE</span><strong th:text="${jogo.faixaEtariaRecomendada} + '+'"></strong></div>
@@ -84,7 +84,7 @@
     <div th:unless="${cliente}" class="game-list public-game-list" th:if="${!#lists.isEmpty(jogos)}">
         <article class="game-row" th:each="jogo, iter : ${jogos}">
             <span class="game-number" th:text="${#numbers.formatInteger(iter.count, 2)}"></span>
-            <div class="game-main"><h2 th:text="${jogo.nome}"></h2><p><span th:text="${jogo.categoria}"></span><span class="meta-separator">/</span><span th:text="${jogo.genero}"></span></p></div>
+            <div class="game-main"><h2><a th:href="@{'/catalogo/' + ${jogo.codigoJogo}}" th:text="${jogo.nome}"></a></h2><p><span th:text="${jogo.categoria}"></span><span class="meta-separator">/</span><span th:text="${jogo.genero}"></span></p></div>
             <div class="game-age" th:if="${jogo.faixaEtariaRecomendada != null}"><span>IDADE</span><strong th:text="${jogo.faixaEtariaRecomendada} + '+'"></strong></div>
             <div class="game-stock"><span th:class="${jogo.statusDisponibilidade ? 'stock-dot available' : 'stock-dot'}"></span><span th:text="${jogo.statusDisponibilidade ? 'Disponivel' : 'Indisponivel'}"></span></div>
             <strong class="game-price" th:text="${'R$ ' + #numbers.formatDecimal(jogo.precoLocacao, 1, 'POINT', 2, 'COMMA')}"></strong>

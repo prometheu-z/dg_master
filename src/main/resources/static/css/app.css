@@ -191,6 +191,57 @@ input:focus, select:focus { border-color: var(--pine); box-shadow: 0 0 0 3px rgb
 .penalty-row { grid-template-columns: minmax(180px, 1fr) auto minmax(150px, .7fr) auto; }
 .empty-line { padding: 20px 0; font-size: 13px; }
 
+.game-details {
+    padding: 20px 0;
+    border-top: 1px solid var(--line);
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.detail-value {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.status-available {
+    color: var(--pine);
+}
+
+.status-unavailable {
+    color: var(--coral);
+}
+
+.dependent-row {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    justify-content: space-between;
+}
+
+.game-main h2 a {
+    color: var(--ink);
+    text-decoration: none;
+}
+
+.game-main h2 a:hover {
+    color: var(--pine);
+}
+
 @media (max-width: 900px) {
     .game-create-form { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     .game-create-form button { grid-column: span 2; }
@@ -236,4 +287,122 @@ input:focus, select:focus { border-color: var(--pine); box-shadow: 0 0 0 3px rgb
     .deadline-row, .penalty-row { grid-template-columns: 1fr auto; gap: 10px; }
     .deadline-row .deadline-date, .penalty-row .deadline-date { grid-column: 1; }
     .deadline-row form, .penalty-row form { grid-column: 2; grid-row: 2; }
+}
+
+/* Admin page styles */
+.container {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+.card {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 32px;
+    box-shadow: var(--shadow);
+}
+
+.card h1 {
+    margin: 0 0 24px;
+    font-size: 28px;
+    color: var(--ink);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 700;
+    font-size: 12px;
+    color: #43564e;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #cbd7cf;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.form-group input:focus {
+    border-color: var(--pine);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(23, 100, 72, .12);
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.btn {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-primary {
+    background: var(--pine);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--pine-dark);
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: transparent;
+    border: 1px solid #b8c8be;
+    color: var(--ink);
+}
+
+.btn-secondary:hover {
+    border-color: var(--pine);
+    color: var(--pine);
+}
+
+.info-box {
+    margin-top: 24px;
+    padding: 16px;
+    background: var(--soft-green);
+    border-left: 3px solid var(--pine);
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--pine-dark);
+}
+
+.info-box p {
+    margin: 0;
+}
+
+.alert {
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.alert-success {
+    background: var(--soft-green);
+    border-left: 3px solid var(--pine);
+    color: var(--pine-dark);
+}
+
+.alert-error {
+    background: var(--soft-coral);
+    border-left: 3px solid var(--coral);
+    color: #833c2d;
 }

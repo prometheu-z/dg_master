@@ -50,41 +50,38 @@ public class AuthController {
     }
 
     @PostMapping("/cadastro")
-    public ResponseEntity<AuthResponse> cadastrar(@Valid @RequestBody CadastroRequest request) {
-        if (request.tipo().equalsIgnoreCase("CLIENTE")) {
-            if (clienteRepository.existsByEmail(request.email())) {
-                return ResponseEntity.status(HttpStatus.CONFLICT).build();
-            }
-
-            Cliente cliente = new Cliente();
-            cliente.setCpf(request.cpf());
-            cliente.setNome(request.nome());
-            cliente.setEmail(request.email());
-            cliente.setSenha(passwordEncoder.encode(request.senha()));
-            cliente.setDataNascimento(LocalDate.parse(request.dataNascimento()));
-            cliente.setStatusConta(true);
-            clienteRepository.save(cliente);
-
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(new AuthResponse("CLIENTE", cliente.getCpf(), cliente.getNome(), cliente.getEmail(), true));
+    public ResponseEntity<AuthResponse> cadastrarCliente(@Valid @RequestBody CadastroRequest request) {
+        if (clienteRepository.existsByEmail(request.email())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
 
-        if (request.tipo().equalsIgnoreCase("GERENTE")) {
-            if (gerenteRepository.existsByEmail(request.email())) {
-                return ResponseEntity.status(HttpStatus.CONFLICT).build();
-            }
+        Cliente cliente = new Cliente();
+        cliente.setCpf(request.cpf());
+        cliente.setNome(request.nome());
+        cliente.setEmail(request.email());
+        cliente.setSenha(passwordEncoder.encode(request.senha()));
+        cliente.setDataNascimento(LocalDate.parse(request.dataNascimento()));
+        cliente.setStatusConta(true);
+        clienteRepository.save(cliente);
 
-            Gerente gerente = new Gerente();
-            gerente.setNome(request.nome());
-            gerente.setEmail(request.email());
-            gerente.setSenha(passwordEncoder.encode(request.senha()));
-            gerenteRepository.save(gerente);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new AuthResponse("CLIENTE", cliente.getCpf(), cliente.getNome(), cliente.getEmail(), true));
+    }
 
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(new AuthResponse("GERENTE", null, gerente.getNome(), gerente.getEmail(), true));
+    @PostMapping("/cadastro-gerente")
+    public ResponseEntity<AuthResponse> cadastrarGerente(@Valid @RequestBody GerenteRequest request) {
+        if (gerenteRepository.existsByEmail(request.email())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
 
-        return ResponseEntity.badRequest().build();
+        Gerente gerente = new Gerente();
+        gerente.setNome(request.nome());
+        gerente.setEmail(request.email());
+        gerente.setSenha(passwordEncoder.encode(request.senha()));
+        gerenteRepository.save(gerente);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new AuthResponse("GERENTE", null, gerente.getNome(), gerente.getEmail(), true));
     }
 
     @PostMapping("/login")

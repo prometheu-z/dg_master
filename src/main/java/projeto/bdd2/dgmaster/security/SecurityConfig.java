@@ -63,12 +63,14 @@ public class SecurityConfig {
             .securityContext(context -> context.securityContextRepository(securityContextRepository()))
                 .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/login", "/cadastro", "/catalogo", "/catalogo/**",
-                            "/css/**", "/js/**", "/webjars/**", "/api/auth/**").permitAll()
+                        .requestMatchers("/", "/login", "/cadastro", "/admin", "/catalogo", "/catalogo/**", "/catalogo/*",
+                            "/css/**", "/js/**", "/webjars/**", "/api/auth/**", "/api/auth/cadastro", "/api/auth/cadastro-gerente").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/jogos/**").permitAll()
                         .requestMatchers("/api/gerente/**", "/api/estatisticas/**").hasRole("GERENTE")
                         .requestMatchers("/api/clientes/**", "/api/alugueis/**").hasAnyRole("CLIENTE", "GERENTE")
+                        .requestMatchers("/gerente/**", "/gerente/estatisticas").hasRole("GERENTE")
+                        .requestMatchers("/cliente/**").hasRole("CLIENTE")
                         .anyRequest().authenticated())
                 .formLogin(form -> form
                         .loginPage("/login")

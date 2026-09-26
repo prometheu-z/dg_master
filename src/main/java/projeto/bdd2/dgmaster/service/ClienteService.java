@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import projeto.bdd2.dgmaster.entity.Cliente;
 import projeto.bdd2.dgmaster.entity.Dependente;
+import projeto.bdd2.dgmaster.entity.StatusAluguel;
 import projeto.bdd2.dgmaster.repository.ClienteRepository;
 import projeto.bdd2.dgmaster.repository.DependenteRepository;
 
@@ -79,5 +80,48 @@ public class ClienteService {
 
         dependente.setCliente(cliente);
         return dependenteRepository.save(dependente);
+    }
+
+    @Transactional
+    public Cliente atualizarPerfil(String cpf, String nome, String email) {
+        Cliente cliente = buscarPorCpf(cpf);
+        
+        if (nome != null && !nome.isBlank()) {
+            cliente.setNome(nome);
+        }
+        
+        if (email != null && !email.isBlank() && !email.equals(cliente.getEmail())) {
+            if (clienteRepository.existsByEmail(email)) {
+                throw new IllegalArgumentException("E-mail já cadastrado para outro usuário");
+            }
+            cliente.setEmail(email);
+        }
+        
+        return clienteRepository.save(cliente);
+    }
+
+    @Transactional
+    public void removerDependente(String cpfCliente, Integer idDependente) {
+        Cliente cliente = buscarPorCpf(cpfCliente);
+        Dependente dependente = dependenteRepository.findById(idDependente)
+                .orElseThrow(() -> new IllegalArgumentException("Dependente não encontrado"));
+        
+        if (!dependente.getCliente().getCpf().equals(cpfCliente)) {
+            throw new IllegalArgumentException("Dependente não pertence a este cliente");
+        }
+        
+        // Verificar se dependente tem aluguéis ativos
+        boolean temAlugueisAtivos = cliente.getAlugueis().stream()
+                .anyMatch(a -> a.getDependente() != null && 
+                              a.getDependente().getIdDependente().equals(idDependente) &&
+                              (a.getStatus() == StatusAluguel.RESERVADO || 
+                               a.getStatus() == StatusAluguel.RETIRADO || 
+                               a.getStatus() == StatusAluguel.ATRASADO));
+        
+        if (temAlugueisAtivos) {
+            throw new IllegalArgumentException("Não é possível remover dependente com aluguéis ativos");
+        }
+        
+        dependenteRepository.delete(dependente);
     }
 }

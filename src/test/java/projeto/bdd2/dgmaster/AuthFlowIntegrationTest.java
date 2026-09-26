@@ -34,8 +34,8 @@ class AuthFlowIntegrationTest {
         String cpf = "123456789" + String.format("%02d", Math.abs(UUID.randomUUID().hashCode()) % 100);
         String email = "cliente.auth." + UUID.randomUUID() + "@test.com";
 
-        ResponseEntity<AuthResponse> response = authController.cadastrar(
-                new CadastroRequest("CLIENTE", cpf, "Cliente Auth", email, "Senha@123", "1990-01-15"));
+        ResponseEntity<AuthResponse> response = authController.cadastrarCliente(
+                new CadastroRequest(cpf, "Cliente Auth", email, "Senha@123", "1990-01-15"));
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(response.getBody()).isNotNull();

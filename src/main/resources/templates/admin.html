@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Gerente - DG Master</title>
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>Cadastro de Gerente</h1>
+            
+            <div th:if="${sucesso}" class="alert alert-success">
+                <span th:text="${sucesso}"></span>
+            </div>
+            
+            <div th:if="${erro}" class="alert alert-error">
+                <span th:text="${erro}"></span>
+            </div>
+
+            <form method="post" action="/admin">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <div class="form-group">
+                    <label for="nome">Nome:</label>
+                    <input type="text" id="nome" name="nome" required
+                           minlength="3" maxlength="150"
+                           placeholder="Nome completo do gerente">
+                </div>
+
+                <div class="form-group">
+                    <label for="email">E-mail:</label>
+                    <input type="email" id="email" name="email" required
+                           placeholder="email@exemplo.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="senha">Senha:</label>
+                    <input type="password" id="senha" name="senha" required
+                           minlength="6"
+                           placeholder="Mínimo 6 caracteres">
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Criar Gerente</button>
+                    <a href="/login" class="btn btn-secondary">Voltar ao Login</a>
+                </div>
+            </form>
+
+            <div class="info-box">
+                <p><strong>Nota:</strong> Esta página é apenas para criação inicial de gerentes. 
+                Apenas gerentes podem acessar o painel administrativo.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
