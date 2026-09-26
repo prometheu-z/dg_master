@@ -4,7 +4,7 @@
 |---|---|
 | Status | Draft |
 | Autor(es) | Equipe DG Master — Grupo 04 (IFSP, SPOBDD2 — Banco de Dados) |
-| Stack alvo | Java 21 + Spring Boot 3.x + MySQL 8 + Thymeleaf/Bootstrap |
+| Stack implementada | Java 25 + Spring Boot 4.1.1 + MySQL 8 + Thymeleaf |
 | Objetivo do documento | Especificação técnica completa para guiar a implementação do sistema (por humanos ou por um agente de IA via CLI) |
 
 ---
@@ -39,29 +39,30 @@ Essa escolha concentra toda a aplicação em uma única stack de linguagem, elim
 
 ### 2.3. Back-End e Linguagem de Programação
 
-Java 21 + Spring Boot 3.x, com os seguintes módulos:
+Java 25 + Spring Boot 4.1.1, com os seguintes módulos:
 
 - **Spring Web (MVC):** roteamento das requisições e construção dos controllers.
 - **Spring Data JPA (com Hibernate):** mapeamento objeto-relacional das entidades da seção 7 (Cliente, Dependente, Jogo, AluguelReserva, Penalidade, Gerente) e implementação do padrão DAO/Repository.
-- **Spring Security:** autenticação **por sessão** (padrão Thymeleaf) e controle de acesso por perfil (Cliente x Gerente), com suporte a 2FA (RNF03) como segunda etapa do login. Optou-se por sessão em vez de JWT por simplicidade — não há previsão de front-end desacoplado (SPA) neste momento; a migração para JWT fica registrada como possível evolução futura caso isso mude.
+- **Spring Security:** autenticação **por sessão**, proteção CSRF e controle de acesso por perfil (Cliente x Gerente). 2FA não faz parte do MVP e permanece como evolução futura. Optou-se por sessão em vez de JWT por simplicidade — não há previsão de front-end desacoplado (SPA) neste momento.
 - **Bean Validation (Jakarta Validation):** validação de dados de entrada, como formato de CPF e força de senha (CA01/CA02 da HU01).
-- **Spring Boot Starter Mail:** envio de notificações (ver 2.5).
+- **Spring Boot Starter Mail:** evolução futura; não está incluído no MVP.
 - **Spring Scheduler (`@Scheduled`):** jobs de expiração de reserva (RN3) e verificação diária de atraso (RN1).
 - **Thymeleaf:** renderização das views, conforme 2.2.
 
 Estrutura de pacotes sugerida:
 
 ```
-com.dgmaster
-├── cliente/         (Cliente, Dependente: controller, service, repository, dto)
-├── jogo/            (Jogo: controller, service, repository, dto)
-├── aluguel/         (AluguelReserva, Penalidade: controller, service, repository, dto)
-├── gerente/         (Gerente, relatórios/estatísticas)
-├── seguranca/       (Spring Security, autenticação por sessão, 2FA)
-├── notificacao/     (envio de e-mail via Mailtrap)
-├── scheduler/       (jobs: expiração de reserva, cálculo de atraso)
-├── comum/           (exceptions, validações, utilitários)
-└── DgMasterApplication.java
+projeto.bdd2.dgmaster
+├── auth/            (cadastro, login e respostas)
+├── cliente/api/     (perfil e dependentes)
+├── catalogo/api/    (catálogo e administração de jogos)
+├── aluguel/api/     (reservas, aluguel e penalidades)
+├── entity/          (entidades JPA, incluindo ItemAluguel)
+├── repository/      (repositórios Spring Data)
+├── service/         (regras de negócio)
+├── security/        (sessão, autorização e CSRF)
+├── scheduler/       (expiração e prazos)
+└── DgmasterApplication.java
 ```
 
 ### 2.4. Sistema Gerenciador de Banco de Dados (SGBD)
@@ -76,7 +77,7 @@ A comunicação entre aplicação e banco ocorre via JDBC, abstraída pelo Hiber
 
 O sistema expõe endpoints internos no padrão REST (seção 9), consumidos pelas próprias views Thymeleaf.
 
-Para notificações por e-mail — confirmação de cadastro, expiração de reserva (RN3) e alertas de atraso/penalidade (RN1) — será usado o Spring Boot Starter Mail integrado ao **Mailtrap** como provedor SMTP, cobrindo o ambiente de desenvolvimento e testes/homologação. A definição do provedor real de produção (ex.: Gmail SMTP, SendGrid, Amazon SES) fica como item em aberto (seção 15) e não deve afetar a implementação, já que a troca se resume a alterar as credenciais SMTP em `application.properties`.
+Notificações por e-mail estão fora do MVP. Em uma evolução futura, Mailtrap poderá ser usado para desenvolvimento e testes; um provedor de produção será escolhido ao incluir esse escopo.
 
 Não estão previstas, neste primeiro momento, integrações com APIs de terceiros para pagamento ou geolocalização, podendo ser incorporadas em versões futuras do sistema.
 
@@ -99,7 +100,7 @@ Não estão previstas, neste primeiro momento, integrações com APIs de terceir
 |---|---|
 | Visitante | Usuário não autenticado; acessa catálogo e formulário de cadastro |
 | Cliente (Locatário) | Maior de 18 anos, autenticado, cadastro completo; aluga/reserva jogos |
-| Dependente | Vinculado a um Cliente titular (pode ser menor de idade); solicita reservas sujeitas à aprovação do titular |
+| Dependente | Perfil vinculado ao titular; o titular seleciona o perfil ao reservar. Não possui login próprio |
 | Gerente | Administra estoque, prazos, devoluções e relatórios |
 | Sistema | Ator automático: expira reservas, aplica penalidades, calcula descontos |
 
@@ -110,7 +111,7 @@ Não estão previstas, neste primeiro momento, integrações com APIs de terceir
 | Cód. | Regra | Descrição | Implementação sugerida |
 |---|---|---|---|
 | RN1 | Política de atrasos | Multa de R$ 5,00 por jogo por dia iniciado de atraso, limitada ao valor de reposição de cada jogo. Suspensão de 2 dias por dia iniciado de atraso, começando na devolução. Reativar somente após o fim da suspensão e pagamento integral da multa. | `PenalidadeService`, com verificação diária e reativação automática |
-| RN2 | Limite de empréstimos | Máximo de 4 jogos ativos somando titular e dependentes, nos status `RESERVADO`, `RETIRADO` ou `ATRASADO`. Solicitações de dependentes aguardam aprovação do titular. | Validação em `AluguelService` antes da reserva/aprovação |
+| RN2 | Limite de empréstimos | Máximo de 4 jogos ativos somando titular e dependentes, nos status `RESERVADO`, `RETIRADO` ou `ATRASADO`. O titular seleciona o perfil e a reserva é confirmada no mesmo ato. | Validação em `AluguelService` antes de reservar |
 | RN3 | Tempo de retirada | Reserva aprovada não retirada em 24h expira automaticamente e seu valor vira crédito em carteira para a próxima locação. | `ReservaExpirationJob` (Spring `@Scheduled`, roda a cada hora) |
 | RN4 | Contrato de aluguel | Todo aluguel registra aceite digital dos termos de guarda, danos, reposição e multa por atraso. | Campos de contrato embutidos na entidade `AluguelReserva` |
 | RN5 | Tempo de atividade | Sistema deve estar no ar 24x7 | Requisito de infraestrutura/deploy, fora do código de negócio |
@@ -125,7 +126,7 @@ Não estão previstas, neste primeiro momento, integrações com APIs de terceir
 |---|---|---|---|---|
 | RF01 | Cadastrar usuário | Cadastro com CPF, e-mail e senha segura | Create | Visitante |
 | RF02 | Visualizar situação de jogos | Ver jogos a retirar, atrasados ou alugados | Read | Cliente |
-| RF03 | Gerenciar reservas | Solicitar ou cancelar reservas | Create/Delete | Cliente/Dependente |
+| RF03 | Gerenciar reservas | Titular solicita ou cancela reserva para si ou para um dependente selecionado | Create/Delete | Cliente titular |
 | RF04 | Cadastrar dependentes | Cliente cadastra dependentes com mesmas capacidades de aluguel | Create | Cliente |
 | RF05 | Gerar descontos | Desconto automático por aluguel de múltiplos jogos | — (regra automática) | Sistema |
 | RF06 | Filtrar catálogo | Filtro por idade, gênero e categoria | Read | Cliente/Visitante |
@@ -142,7 +143,7 @@ Não estão previstas, neste primeiro momento, integrações com APIs de terceir
 |---|---|---|---|
 | RNF01 | Segurança | Dados armazenados e transmitidos de forma criptografada e operações autenticadas protegidas contra CSRF e fixação de sessão | HTTPS/TLS em produção; senha com `BCryptPasswordEncoder`; token CSRF em operações de escrita; salvar o contexto autenticado em sessão e rotacionar o ID no login |
 | RNF02 | Usabilidade | Interface responsiva | Bootstrap (grid + componentes responsivos) |
-| RNF03 | Segurança | Autenticação de dois fatores (2FA) opcional | Pendente: configurar TOTP ou código por e-mail e validar o desafio antes de declarar autenticação concluída |
+| RNF03 | Segurança | Autenticação de dois fatores (2FA) opcional | Fora do escopo do MVP; manter como evolução futura antes de habilitar qualquer confirmação 2FA no login |
 | RNF04 | Compatibilidade/Escalabilidade | Suportar usuários simultâneos mantendo desempenho em operações críticas | Índices em CPF/e-mail, connection pool (HikariCP), paginação nas listagens |
 | RNF05 | Produto | Catálogo organizado com filtros | Endpoints com query params + índices em `genero`, `faixaEtariaRecomendada` |
 | RNF06 | Compatibilidade | Funcionar em navegadores Chromium/WebKit | Evitar recursos exclusivos de outros engines no front-end |
@@ -205,7 +206,7 @@ Não estão previstas, neste primeiro momento, integrações com APIs de terceir
 | dataLimiteRetirada | DATETIME | prazo de 24h aplicado apenas em `RESERVADO`; a aprovação define/reinicia o prazo (RN3) |
 | dataLimiteDevolucao | DATETIME | retirada + 7 dias corridos, acrescida de 7 dias na única renovação (RF07) |
 | dataDevolucaoReal | DATETIME | nulo até devolução |
-| status | VARCHAR/ENUM | `AGUARDANDO_APROVACAO`, `RESERVADO`, `RETIRADO`, `DEVOLVIDO`, `ATRASADO`, `EXPIRADO`, `CANCELADO` |
+| status | VARCHAR/ENUM | `RESERVADO`, `RETIRADO`, `DEVOLVIDO`, `ATRASADO`, `EXPIRADO`, `CANCELADO` |
 | valorTotal | DOUBLE | após aplicar desconto (RN6) |
 | creditoAplicado | DECIMAL(10,2) | parcela do crédito em carteira usada nesta locação |
 | quantidadeRenovacoes | INTEGER | máx. 1 (RF07) |
@@ -219,12 +220,14 @@ Texto do contrato (RN4):
 
 > "Ao realizar a retirada do(s) jogo(s) descrito(s) neste aluguel, o Locatário titular assume total responsabilidade civil e financeira pela guarda, conservação e integridade de todos os componentes (tabuleiro, cartas, peças, manuais e caixa). Em caso de perda, extravio ou dano que inviabilize o uso do produto, o Locatário concorda em arcar com o valor integral de reposição do jogo de tabuleiro. A devolução fora do prazo estipulado implica em multa diária de R$ 5,00 por item e suspensão temporária da plataforma. O aceite digital deste termo possui validade legal e vinculativa para a DG Master LTDA."
 
-### 7.6. Contém (tabela associativa Jogo ↔ AluguelReserva, N:N)
-| Campo | Tipo |
-|---|---|
-| jogoCodigo | **FK** → Jogo |
-| aluguelId | **FK** → AluguelReserva |
-| precoLocacaoNoAluguel | DECIMAL(10,2) | preço unitário congelado no momento da reserva; base para relatórios históricos de rentabilidade |
+### 7.6. ItemAluguel / Contém (entidade associativa Jogo ↔ AluguelReserva)
+Mapeada como entidade JPA explícita com `@EmbeddedId` composto por `jogoCodigo` e `aluguelId`.
+
+| Campo | Tipo | Observação |
+|---|---|---|
+| jogoCodigo | INTEGER | **FK/parte da PK** → Jogo |
+| aluguelId | INTEGER | **FK/parte da PK** → AluguelReserva |
+| valorUnitarioCobrado | DECIMAL(10,2) | preço após desconto, congelado no momento da reserva |
 
 ### 7.7. Penalidade
 | Campo | Tipo | Observação |
@@ -304,7 +307,7 @@ CREATE TABLE aluguel_reserva (
 CREATE TABLE contem (
   jogo_codigo INT NOT NULL,
   aluguel_id INT NOT NULL,
-  preco_locacao_no_aluguel DECIMAL(10,2) NOT NULL,
+  valor_unitario_cobrado DECIMAL(10,2) NOT NULL,
   PRIMARY KEY (jogo_codigo, aluguel_id),
   FOREIGN KEY (jogo_codigo) REFERENCES jogo(codigo_jogo),
   FOREIGN KEY (aluguel_id) REFERENCES aluguel_reserva(id_aluguel)
@@ -330,7 +333,7 @@ CREATE TABLE penalidade (
 ### Autenticação
 - `POST /api/auth/cadastro` — RF01, CA01/CA02/CA03 da HU01
 - `POST /api/auth/login`
-- `POST /api/auth/2fa/verificar` — RNF03
+- `POST /api/auth/2fa/verificar` — placeholder que retorna `501 Not Implemented`; não valida nem habilita 2FA (evolução futura RNF03)
 
 ### Cliente / Dependente
 - `GET /api/clientes/{cpf}` — autenticado, somente o próprio titular
@@ -346,10 +349,9 @@ CREATE TABLE penalidade (
 - `DELETE /api/jogos/{codigo}` — somente Gerente; desativa do catálogo e preserva histórico; bloqueia enquanto reservado/alugado (RF09, HU05 CA01/CA02)
 
 ### Aluguel / Reserva
-- `POST /api/alugueis` — Cliente autenticado; `idDependente` opcional; valida RN2/RN7 e gera contrato RN4
+- `POST /api/alugueis` — Cliente titular autenticado; `idDependente` opcional seleciona o perfil do dependente; valida RN2/RN7 e gera contrato RN4
 - `DELETE /api/alugueis/{id}` — titular cancela a própria reserva (RF03)
 - `PUT /api/alugueis/{id}/retirar` — somente titular; muda status para RETIRADO
-- `PUT /api/alugueis/{id}/aprovar` — titular aprova solicitação registrada para dependente; inicia janela de 24h
 - `PUT /api/alugueis/{id}/renovar` — titular, RF07 (uma única extensão de 7 dias)
 - `PUT /api/alugueis/{id}/devolver` — Gerente registra `dataDevolucaoReal`, calcula atraso (RN1)
 - `GET /api/alugueis?status=&clienteCpf=` — somente Gerente (RF08)
@@ -383,7 +385,7 @@ CREATE TABLE penalidade (
 |---|---|---|---|
 | HU01 | visitante | criar conta com CPF e e-mail | CPF válido; senha forte (letras, números, 1 caractere especial, ≥8 dígitos); dados criptografados |
 | HU02 | cliente | ver situação dos meus aluguéis | Se vazio, exibir "Você não possui jogos alugados ou reservados no momento" |
-| HU03 | cliente | cadastrar dependentes que não atendem RN7 | Cliente vê aluguéis dos dependentes; recebe solicitação de aprovação de aluguel do dependente |
+| HU03 | cliente | cadastrar dependentes que não atendem RN7 | Titular vê os aluguéis dos dependentes e seleciona o perfil do dependente ao criar a reserva |
 | HU04 | cliente | filtrar catálogo por idade/gênero | Resposta em até 2s; mensagem se nada encontrado |
 | HU05 | gerente | inserir/remover jogos | Bloquear exclusão de jogo com cópia alugada ou reservada |
 | HU06 | cliente | alugar jogos | Conta ativa; contrato em conformidade; bloqueio se já houver 4 jogos alugados (RN2) |
@@ -401,16 +403,16 @@ CREATE TABLE penalidade (
 | Comando | Ator | Evento resultante | RF/RN |
 |---|---|---|---|
 | Cadastrar conta | Visitante | Usuário cadastrado | RF01 |
-| Autenticar | Cliente/Gerente | Sessão iniciada | RF01, RNF03 |
+| Autenticar | Cliente/Gerente | Sessão iniciada com CSRF e sessão persistida | RF01, RNF01 |
 | Cadastrar dependente | Cliente | Dependente cadastrado | RF04 |
 | Filtrar catálogo | Cliente/Visitante | Catálogo filtrado | RF06 |
-| Solicitar reserva | Cliente/Dependente | Reserva solicitada | RF03 |
-| Cancelar reserva | Cliente/Dependente | Reserva cancelada | RF03 |
+| Solicitar reserva | Cliente titular | Reserva do titular ou dependente selecionado criada | RF03 |
+| Cancelar reserva | Cliente titular | Reserva própria ou do dependente cancelada | RF03 |
 | Renovar aluguel | Cliente | Aluguel renovado | RF07 |
 | Aprovar contrato | Cliente | Contrato assinado | RN4 |
 | Retirar jogo reservado | Cliente | Jogo alugado (retirado) | RN3, RF02 |
 | Expirar reserva | Sistema | Reserva expirada | RN3 |
-| Reembolsar valor | Sistema | Valor reembolsado | RN3 |
+| Creditar expiração | Sistema | Crédito de carteira emitido | RN3 |
 | Gerar desconto | Sistema | Desconto aplicado | RF05, RN6 |
 | Registrar devolução com atraso | Sistema/Gerente | Atraso registrado | RN1, RF08 |
 | Aplicar penalidade | Sistema | Penalidade aplicada | RN1 |
@@ -424,7 +426,7 @@ CREATE TABLE penalidade (
 
 - **Visitante** — usuário não autenticado que acessa o catálogo ou cria conta.
 - **Cliente (Locatário)** — maior de 18 anos, autenticado, elegível para alugar/reservar de forma autônoma.
-- **Dependente** — vinculado à conta de um Cliente titular; reservas sujeitas à aprovação do titular.
+- **Dependente** — perfil vinculado ao Cliente titular; não autentica, nem retira jogos; o titular realiza as operações em seu nome.
 - **Gerente** — administra estoque, métricas financeiras e de aluguéis.
 - **Sistema** — ator automático (expira reservas, aplica penalidades, calcula descontos).
 - **Catálogo** — vitrine digital de jogos, com filtros de idade e gênero.
@@ -450,16 +452,22 @@ CREATE TABLE penalidade (
 10. Fluxo de devolução + cálculo de atraso + penalidade (RN1, RF08).
 11. Renovação de aluguel (RF07).
 12. Painel/endpoints administrativos e estatísticas (RF10, RF08).
-13. 2FA (RNF03) e auditoria (RNF08) — podem ficar para uma segunda iteração.
+13. 2FA (RNF03), notificações por e-mail e auditoria (RNF08) — evoluções futuras, fora do fluxo principal do MVP.
 14. Testes unitários e de integração cobrindo as regras de negócio críticas (RN1–RN7).
 
 ---
 
 ## 15. Itens em aberto
 
-- Definir provedor de e-mail (SMTP) a ser usado em **produção** (Mailtrap cobre apenas dev/testes, ver 2.5).
-- Definir se `status` das entidades será `VARCHAR` ou `ENUM` no MySQL (sugestão: `VARCHAR` + enum Java, mais flexível para migrações).
-- Definir o provedor de pagamento/baixa externa da multa. Até essa integração existir, a baixa deve ser registrada por operação administrativa autenticada.
-- Definir autenticação do Dependente: o modelo atual não possui credenciais/identidade autenticável para que ele solicite a reserva independentemente do titular.
-- Definir se a solicitação de reserva de dependente será registrada pelo titular em nome dele (com aprovação explícita posterior) ou se Dependente receberá conta e autenticação próprias.
-- Implementar snapshot de `precoLocacaoNoAluguel` na associação `contem` antes de produzir os rankings históricos de rentabilidade de RF10.
+- Estados persistidos como `VARCHAR` com enums Java, conforme implementação atual.
+- No MVP, não há gateway: gerente registra manualmente a baixa da multa pelo endpoint administrativo.
+- O preço histórico de aluguéis anteriores à inclusão de `valor_unitario_cobrado` não pode ser reconstruído com precisão se o preço do catálogo já mudou; esses registros devem ser excluídos ou identificados como sem snapshot nos relatórios de rentabilidade.
+
+---
+
+## 16. Trabalhos Futuros / Débito Técnico
+
+- Implementar 2FA real (TOTP ou código de e-mail) com emissão, expiração e validação do desafio. A rota atual retorna `501` até existir um verificador.
+- Implementar notificações assíncronas de confirmação, expiração e atraso. Mailtrap pode ser usado em desenvolvimento; o provedor de produção deve ser definido quando essa evolução entrar no escopo.
+- Implementar dashboard e rankings gerenciais de rentabilidade usando `valor_unitario_cobrado` como snapshot por jogo.
+- Planejar migração dos registros antigos da tabela `contem`; o preço histórico exato não pode ser inferido quando o preço do catálogo já foi alterado.

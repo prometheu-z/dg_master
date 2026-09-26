@@ -5,6 +5,7 @@ import org.springframework.transaction.annotation.Transactional;
 import projeto.bdd2.dgmaster.entity.AluguelReserva;
 import projeto.bdd2.dgmaster.entity.Cliente;
 import projeto.bdd2.dgmaster.entity.Dependente;
+import projeto.bdd2.dgmaster.entity.ItemAluguel;
 import projeto.bdd2.dgmaster.entity.Jogo;
 import projeto.bdd2.dgmaster.entity.Penalidade;
 import projeto.bdd2.dgmaster.entity.StatusAluguel;
@@ -71,8 +72,9 @@ public class AluguelService {
         if (Set.copyOf(idsJogos).size() != idsJogos.size()) {
             throw new IllegalArgumentException("A solicitação não pode conter jogos duplicados");
         }
+        Dependente dependente = null;
         if (idDependente != null) {
-            Dependente dependente = dependenteRepository.findById(idDependente)
+            dependente = dependenteRepository.findById(idDependente)
                     .orElseThrow(() -> new IllegalArgumentException("Dependente não encontrado: " + idDependente));
             if (!dependente.getCliente().getCpf().equals(cpfCliente)) {
                 throw new IllegalArgumentException("Dependente não pertence ao cliente informado");
@@ -101,61 +103,29 @@ public class AluguelService {
         }
 
         validarLimiteAtivo(cpfCliente, jogos.size());
-        boolean aguardandoAprovacao = idDependente != null;
         BigDecimal valorComDesconto = calcularValorComDesconto(valorBruto, jogos.size());
+        List<BigDecimal> valoresUnitarios = calcularValoresUnitarios(jogos, valorComDesconto);
 
         AluguelReserva aluguel = new AluguelReserva();
         aluguel.setCliente(cliente);
-        if (idDependente != null) {
-            aluguel.setDependente(dependenteRepository.findById(idDependente).orElseThrow());
-        }
+        aluguel.setDependente(dependente);
         aluguel.setDataHoraReserva(LocalDateTime.now());
         aluguel.setDataLimiteRetirada(LocalDateTime.now().plusHours(PRAZO_RESERVA_HORAS));
-        aluguel.setStatus(aguardandoAprovacao ? StatusAluguel.AGUARDANDO_APROVACAO : StatusAluguel.RESERVADO);
+        aluguel.setStatus(StatusAluguel.RESERVADO);
         aluguel.setValorTotal(valorComDesconto.doubleValue());
         aluguel.setCreditoAplicado(BigDecimal.ZERO);
-        aluguel.setJogos(jogos);
         aluguel.setQuantidadeRenovacoes(0);
         aluguel.setTermosContrato(TERMOS_CONTRATO);
 
-        if (!aguardandoAprovacao) {
-            aplicarCreditoCarteira(cliente, aluguel, valorComDesconto);
-            reservarEstoque(jogos);
-        }
+        aplicarCreditoCarteira(cliente, aluguel, valorComDesconto);
+        reservarEstoque(jogos);
 
         AluguelReserva reservaSalva = aluguelReservaRepository.save(aluguel);
-        for (Jogo jogo : jogos) {
-            jogo.getAlugueis().add(reservaSalva);
-            jogoRepository.save(jogo);
+        for (int index = 0; index < jogos.size(); index++) {
+            ItemAluguel item = new ItemAluguel(jogos.get(index), reservaSalva, valoresUnitarios.get(index));
+            reservaSalva.getItensAluguel().add(item);
         }
-        return reservaSalva;
-    }
-
-    @Transactional
-    public AluguelReserva aprovarReserva(Integer idAluguel, String cpfTitular) {
-        AluguelReserva reserva = buscarReserva(idAluguel);
-        validarTitular(reserva, cpfTitular);
-        validarContaAtiva(reserva.getCliente());
-        if (reserva.getStatus() != StatusAluguel.AGUARDANDO_APROVACAO) {
-            throw new IllegalStateException("A reserva não está aguardando aprovação");
-        }
-        validarLimiteAtivo(cpfTitular, reserva.getJogos().size());
-        for (Jogo jogo : reserva.getJogos()) {
-            if (jogo.getQuantidadeEstoque() <= 0) {
-                throw new IllegalArgumentException("Jogo indisponível no estoque: " + jogo.getNome());
-            }
-        }
-
-        BigDecimal valorBruto = BigDecimal.ZERO;
-        for (Jogo jogo : reserva.getJogos()) {
-            valorBruto = valorBruto.add(jogo.getPrecoLocacao());
-        }
-        BigDecimal valorComDesconto = calcularValorComDesconto(valorBruto, reserva.getJogos().size());
-        aplicarCreditoCarteira(reserva.getCliente(), reserva, valorComDesconto);
-        reserva.setStatus(StatusAluguel.RESERVADO);
-        reserva.setDataLimiteRetirada(LocalDateTime.now().plusHours(PRAZO_RESERVA_HORAS));
-        reservarEstoque(reserva.getJogos());
-        return aluguelReservaRepository.save(reserva);
+        return aluguelReservaRepository.save(reservaSalva);
     }
 
     @Transactional
@@ -180,13 +150,12 @@ public class AluguelService {
     public AluguelReserva cancelarReserva(Integer idAluguel, String cpfTitular) {
         AluguelReserva reserva = buscarReserva(idAluguel);
         validarTitular(reserva, cpfTitular);
-        if (reserva.getStatus() == StatusAluguel.RESERVADO) {
-            restaurarEstoque(reserva);
-            devolverCreditoAplicado(reserva);
-        } else if (reserva.getStatus() != StatusAluguel.AGUARDANDO_APROVACAO) {
-            throw new IllegalStateException("Somente solicitações pendentes ou reservas aguardando retirada podem ser canceladas");
+        if (reserva.getStatus() != StatusAluguel.RESERVADO) {
+            throw new IllegalStateException("Somente reservas aguardando retirada podem ser canceladas");
         }
 
+        restaurarEstoque(reserva);
+        devolverCreditoAplicado(reserva);
         reserva.setStatus(StatusAluguel.CANCELADO);
         return aluguelReservaRepository.save(reserva);
     }
@@ -279,7 +248,8 @@ public class AluguelService {
 
     private Penalidade atualizarPenalidadeAtraso(AluguelReserva reserva, long diasAtraso) {
         BigDecimal total = BigDecimal.ZERO;
-        for (Jogo jogo : reserva.getJogos()) {
+        for (ItemAluguel item : reserva.getItensAluguel()) {
+            Jogo jogo = item.getJogo();
             if (jogo.getValorReposicao() == null || jogo.getValorReposicao().signum() <= 0) {
                 throw new IllegalStateException("Valor de reposição não configurado para o jogo: " + jogo.getNome());
             }
@@ -312,7 +282,7 @@ public class AluguelService {
         Collection<StatusAluguel> statusAtivos = List.of(
                 StatusAluguel.RESERVADO, StatusAluguel.RETIRADO, StatusAluguel.ATRASADO);
         int quantidadeAtiva = aluguelReservaRepository.findByClienteCpfAndStatusIn(cpfCliente, statusAtivos).stream()
-                .mapToInt(reserva -> reserva.getJogos().size())
+            .mapToInt(reserva -> reserva.getItensAluguel().size())
                 .sum();
         if (quantidadeAtiva + quantidadeSolicitada > LIMITE_JOGOS_POR_CLIENTE) {
             throw new IllegalArgumentException("Limite máximo de 4 jogos ativos por cliente e dependentes");
@@ -322,6 +292,22 @@ public class AluguelService {
     private BigDecimal calcularValorComDesconto(BigDecimal valorBruto, int quantidadeJogos) {
         return valorBruto.multiply(BigDecimal.valueOf(1 - calcularDesconto(quantidadeJogos)))
                 .setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private List<BigDecimal> calcularValoresUnitarios(List<Jogo> jogos, BigDecimal totalComDesconto) {
+        BigDecimal fatorDesconto = BigDecimal.valueOf(1 - calcularDesconto(jogos.size()));
+        List<BigDecimal> valores = new ArrayList<>();
+        BigDecimal subtotalArredondado = BigDecimal.ZERO;
+        for (Jogo jogo : jogos) {
+            BigDecimal valorUnitario = jogo.getPrecoLocacao()
+                    .multiply(fatorDesconto)
+                    .setScale(2, RoundingMode.HALF_UP);
+            valores.add(valorUnitario);
+            subtotalArredondado = subtotalArredondado.add(valorUnitario);
+        }
+        int ultimoIndice = valores.size() - 1;
+        valores.set(ultimoIndice, valores.get(ultimoIndice).add(totalComDesconto.subtract(subtotalArredondado)));
+        return valores;
     }
 
     private void aplicarCreditoCarteira(Cliente cliente, AluguelReserva reserva, BigDecimal valorComDesconto) {
@@ -373,7 +359,8 @@ public class AluguelService {
     }
 
     private void restaurarEstoque(AluguelReserva reserva) {
-        for (Jogo jogo : reserva.getJogos()) {
+        for (ItemAluguel item : reserva.getItensAluguel()) {
+            Jogo jogo = item.getJogo();
             jogo.setQuantidadeEstoque(jogo.getQuantidadeEstoque() + 1);
             jogo.setStatusDisponibilidade(true);
             jogoRepository.save(jogo);

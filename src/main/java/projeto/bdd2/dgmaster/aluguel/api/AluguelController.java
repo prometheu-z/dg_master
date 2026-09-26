@@ -35,18 +35,7 @@ public class AluguelController {
         exigirCliente(principal);
         AluguelReserva reserva = aluguelService.solicitarReserva(
                 principal.getCpf(), request.idDependente(), request.idsJogos());
-        HttpStatus responseStatus = reserva.getStatus() == StatusAluguel.AGUARDANDO_APROVACAO
-                ? HttpStatus.ACCEPTED
-                : HttpStatus.CREATED;
-        return ResponseEntity.status(responseStatus).body(AluguelResponse.from(reserva));
-    }
-
-    @PutMapping("/{id}/aprovar")
-    public AluguelResponse aprovar(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable Integer id) {
-        exigirCliente(principal);
-        return AluguelResponse.from(aluguelService.aprovarReserva(id, principal.getCpf()));
+        return ResponseEntity.status(HttpStatus.CREATED).body(AluguelResponse.from(reserva));
     }
 
     @DeleteMapping("/{id}")

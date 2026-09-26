@@ -3,6 +3,7 @@ package projeto.bdd2.dgmaster;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
 import projeto.bdd2.dgmaster.entity.Cliente;
 import projeto.bdd2.dgmaster.entity.Dependente;
 import projeto.bdd2.dgmaster.entity.Jogo;
@@ -310,7 +311,7 @@ class AluguelReservaIntegrationTest {
         }
 
         @Test
-        void shouldRequireTitularApprovalForDependentReservation() {
+        void shouldCreateDependentReservationImmediatelyUnderTitular() {
         Cliente cliente = criarCliente("dependente");
         Dependente dependente = new Dependente();
         dependente.setNome("Dependente Teste");
@@ -323,21 +324,36 @@ class AluguelReservaIntegrationTest {
             List.of(jogo.getCodigoJogo()));
 
         assertThat(solicitacao.getStatus())
-            .isEqualTo(projeto.bdd2.dgmaster.entity.StatusAluguel.AGUARDANDO_APROVACAO);
-        assertThat(jogoRepository.findById(jogo.getCodigoJogo()).orElseThrow().getQuantidadeEstoque()).isEqualTo(1);
-        aluguelService.expirarReservasVencidas(LocalDateTime.now().plusDays(2));
-        assertThat(aluguelReservaRepository.findById(solicitacao.getIdAluguel()).orElseThrow().getStatus())
-            .isEqualTo(projeto.bdd2.dgmaster.entity.StatusAluguel.AGUARDANDO_APROVACAO);
-
-        assertThatThrownBy(() -> aluguelService.aprovarReserva(solicitacao.getIdAluguel(), "00000000000"))
-            .isInstanceOf(IllegalArgumentException.class);
-        var aprovada = aluguelService.aprovarReserva(solicitacao.getIdAluguel(), cliente.getCpf());
-
-        assertThat(aprovada.getStatus()).isEqualTo(projeto.bdd2.dgmaster.entity.StatusAluguel.RESERVADO);
-        assertThat(aprovada.getDataLimiteRetirada()).isNotNull();
+            .isEqualTo(projeto.bdd2.dgmaster.entity.StatusAluguel.RESERVADO);
+        assertThat(solicitacao.getDependente().getIdDependente()).isEqualTo(dependente.getIdDependente());
+        assertThat(solicitacao.getDataLimiteRetirada()).isNotNull();
         assertThat(jogoRepository.findById(jogo.getCodigoJogo()).orElseThrow().getQuantidadeEstoque()).isZero();
-        assertThatThrownBy(() -> aluguelService.retirarReserva(aprovada.getIdAluguel(), "00000000000"))
+        assertThatThrownBy(() -> aluguelService.retirarReserva(solicitacao.getIdAluguel(), "00000000000"))
             .isInstanceOf(IllegalArgumentException.class);
+
+        var retirada = aluguelService.retirarReserva(solicitacao.getIdAluguel(), cliente.getCpf());
+        assertThat(retirada.getStatus()).isEqualTo(projeto.bdd2.dgmaster.entity.StatusAluguel.RETIRADO);
+        }
+
+        @Test
+        @Transactional
+        void shouldSnapshotDiscountedUnitPricesAtReservationTime() {
+        Cliente cliente = criarCliente("snapshot");
+        Jogo jogoA = criarJogo("Snapshot A", new BigDecimal("10.01"), new BigDecimal("100.00"), 1);
+        Jogo jogoB = criarJogo("Snapshot B", new BigDecimal("20.02"), new BigDecimal("100.00"), 1);
+
+        var reserva = aluguelService.reservar(cliente.getCpf(), List.of(jogoA.getCodigoJogo(), jogoB.getCodigoJogo()));
+        jogoA.setPrecoLocacao(new BigDecimal("99.00"));
+        jogoRepository.save(jogoA);
+
+        var persistida = aluguelReservaRepository.findById(reserva.getIdAluguel()).orElseThrow();
+
+        assertThat(persistida.getItensAluguel())
+            .extracting(item -> item.getValorUnitarioCobrado())
+            .containsExactly(new BigDecimal("9.01"), new BigDecimal("18.02"));
+        assertThat(persistida.getItensAluguel())
+            .extracting(item -> item.getJogo().getPrecoLocacao())
+            .containsExactly(new BigDecimal("99.00"), new BigDecimal("20.02"));
         }
 
         @Test

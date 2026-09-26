@@ -46,9 +46,6 @@ public class Jogo {
     @JoinColumn(name = "gerente_id")
     private Gerente gerente;
 
-    @ManyToMany
-    @JoinTable(name = "contem",
-            joinColumns = @JoinColumn(name = "jogo_codigo"),
-            inverseJoinColumns = @JoinColumn(name = "aluguel_id"))
-    private List<AluguelReserva> alugueis = new ArrayList<>();
+    @OneToMany(mappedBy = "jogo")
+    private List<ItemAluguel> itensAluguel = new ArrayList<>();
 }

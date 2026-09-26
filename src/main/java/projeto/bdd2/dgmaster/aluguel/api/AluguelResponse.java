@@ -1,7 +1,7 @@
 package projeto.bdd2.dgmaster.aluguel.api;
 
 import projeto.bdd2.dgmaster.entity.AluguelReserva;
-import projeto.bdd2.dgmaster.entity.Jogo;
+import projeto.bdd2.dgmaster.entity.ItemAluguel;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -22,8 +22,8 @@ public record AluguelResponse(
 
         public static AluguelResponse from(AluguelReserva reserva) {
                 List<String> nomesJogos = new ArrayList<>();
-                for (Jogo jogo : reserva.getJogos()) {
-                        nomesJogos.add(jogo.getNome());
+                for (ItemAluguel item : reserva.getItensAluguel()) {
+                        nomesJogos.add(item.getJogo().getNome());
                 }
                 return new AluguelResponse(
                                 reserva.getIdAluguel(),

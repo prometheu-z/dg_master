@@ -12,7 +12,7 @@
  • [x] Criar repositórios Spring Data JPA para todas as entidades.
  • [x] Criar script de criação de tabelas em `src/main/resources/schema.sql`.
  • [ ] Configurar migrações versionadas com Flyway ou Liquibase, se necessário.
- • [ ] Persistir preço unitário no aluguel para relatórios históricos de rentabilidade.
+ • [x] Persistir preço unitário com desconto na associação de cada aluguel.
 
 2. Autenticação e Segurança (Épico 1 / RNF01, RNF03)
 
@@ -23,14 +23,14 @@
  • [x] Implementar endpoints de login e cadastro (`/api/auth/cadastro`).
  • [ ] Implementar validação real de 2FA (`/api/auth/2fa/verificar`); a rota responde `501` enquanto não há verificador configurado.
  • [x] Aplicar autorização por perfil para Cliente e Gerente.
- • [ ] Definir autenticação própria e autorização do Dependente.
+ • [x] Usar gestão centralizada pelo titular; Dependente não possui login próprio.
 
 3. Módulo do Cliente e Dependentes (Épico 1 / RF01, RF02, RF04, RN7)
 
  • [x] Validar idade mínima do titular (18 anos ou mais) no cadastro (RN7).
  • [x] Implementar serviços para cadastro e gestão de dependentes.
  • [x] Implementar endpoints autenticados para cadastro e gestão de dependentes.
- • [x] Implementar solicitação de reserva de dependente com aprovação do titular e retirada exclusiva pelo titular.
+ • [x] Permitir ao titular selecionar um dependente ao reservar; a reserva é confirmada no mesmo ato e só o titular pode retirar.
  • [x] Implementar consulta da situação dos jogos e histórico do cliente (`/api/clientes/{cpf}/alugueis`).
  • [x] Permitir que o titular consulte os aluguéis dos seus dependentes.
 

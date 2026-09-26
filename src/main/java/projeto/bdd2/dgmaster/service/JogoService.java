@@ -67,12 +67,11 @@ public class JogoService {
     public void excluir(Integer codigoJogo) {
         Jogo jogo = buscarAtivo(codigoJogo);
         Set<StatusAluguel> estadosComPosse = Set.of(
-                StatusAluguel.AGUARDANDO_APROVACAO,
                 StatusAluguel.RESERVADO,
                 StatusAluguel.RETIRADO,
                 StatusAluguel.ATRASADO);
-        for (var aluguel : jogo.getAlugueis()) {
-            if (estadosComPosse.contains(aluguel.getStatus())) {
+        for (var item : jogo.getItensAluguel()) {
+            if (estadosComPosse.contains(item.getAluguelReserva().getStatus())) {
                 throw new IllegalStateException("Não é possível remover um jogo reservado ou ainda não devolvido");
             }
         }

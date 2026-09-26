@@ -62,8 +62,8 @@ public class AluguelReserva {
     private Double precificacaoMulta;
     private LocalDateTime dataAssinatura;
 
-    @ManyToMany(mappedBy = "alugueis")
-    private List<Jogo> jogos = new ArrayList<>();
+    @OneToMany(mappedBy = "aluguelReserva", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ItemAluguel> itensAluguel = new ArrayList<>();
 
     @OneToMany(mappedBy = "aluguelReserva")
     private List<Penalidade> penalidades = new ArrayList<>();
