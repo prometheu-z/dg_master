@@ -8,6 +8,7 @@ import projeto.bdd2.dgmaster.entity.Jogo;
 import projeto.bdd2.dgmaster.repository.GerenteRepository;
 import projeto.bdd2.dgmaster.service.JogoService;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,6 +35,7 @@ class GerenteEstoqueIntegrationTest {
         jogo.setCategoria("Estratégia");
         jogo.setGenero("Família");
         jogo.setFaixaEtariaRecomendada(8);
+        jogo.setPrecoLocacao(new BigDecimal("35.00"));
         jogo.setQuantidadeEstoque(5);
         jogo.setGerente(gerente);
 

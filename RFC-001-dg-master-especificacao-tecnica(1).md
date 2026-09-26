@@ -189,6 +189,7 @@ Não estão previstas, neste primeiro momento, integrações com APIs de terceir
 | categoria | VARCHAR | |
 | genero | VARCHAR | |
 | faixaEtariaRecomendada | INTEGER | |
+| precoLocacao | DECIMAL(10,2) | preço definido pelo gerente para locação do jogo |
 | quantidadeEstoque | INTEGER | |
 | statusDisponibilidade | BOOLEAN | |
 | gerenteId | INTEGER | **FK** → Gerente (quem cadastrou/gerencia) |
@@ -259,6 +260,7 @@ CREATE TABLE jogo (
   categoria VARCHAR(100),
   genero VARCHAR(100),
   faixa_etaria_recomendada INT,
+  preco_locacao DECIMAL(10,2) NOT NULL,
   quantidade_estoque INT NOT NULL DEFAULT 0,
   status_disponibilidade BOOLEAN NOT NULL DEFAULT TRUE,
   gerente_id INT,

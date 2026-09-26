@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,6 +31,10 @@ public class Jogo {
     private String genero;
 
     private Integer faixaEtariaRecomendada;
+
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal precoLocacao;
+
     private Integer quantidadeEstoque = 0;
     private boolean statusDisponibilidade = true;
 

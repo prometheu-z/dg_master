@@ -10,6 +10,7 @@ import projeto.bdd2.dgmaster.repository.JogoRepository;
 import projeto.bdd2.dgmaster.service.AluguelService;
 
 import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -44,6 +45,7 @@ class AluguelReservaIntegrationTest {
         jogo1.setCategoria("Estratégia");
         jogo1.setGenero("Família");
         jogo1.setFaixaEtariaRecomendada(10);
+        jogo1.setPrecoLocacao(new BigDecimal("40.00"));
         jogo1.setQuantidadeEstoque(2);
         jogoRepository.save(jogo1);
 
@@ -52,6 +54,7 @@ class AluguelReservaIntegrationTest {
         jogo2.setCategoria("Estratégia");
         jogo2.setGenero("Família");
         jogo2.setFaixaEtariaRecomendada(8);
+        jogo2.setPrecoLocacao(new BigDecimal("25.00"));
         jogo2.setQuantidadeEstoque(3);
         jogoRepository.save(jogo2);
 
@@ -59,6 +62,39 @@ class AluguelReservaIntegrationTest {
 
         assertThat(reserva.getIdAluguel()).isNotNull();
         assertThat(reserva.getStatus()).isEqualTo(projeto.bdd2.dgmaster.entity.StatusAluguel.RESERVADO);
+        assertThat(reserva.getTermosContrato()).contains("Termos do contrato");
+        assertThat(reserva.getValorTotal()).isPositive();
+    }
+
+    @Test
+    void shouldApplyProgressiveDiscountForMultipleGames() {
+        Cliente cliente = new Cliente();
+        cliente.setCpf("444555666" + String.format("%02d", Math.abs(UUID.randomUUID().hashCode()) % 90 + 10));
+        cliente.setNome("Cliente Desconto");
+        cliente.setEmail("desconto." + UUID.randomUUID() + "@teste.com");
+        cliente.setSenha("senha123");
+        cliente.setDataNascimento(LocalDate.of(1992, 8, 9));
+        cliente.setStatusConta(true);
+        clienteRepository.save(cliente);
+
+        String uniqueSuffix = UUID.randomUUID().toString().substring(0, 8);
+        List<Integer> ids = new java.util.ArrayList<>();
+
+        for (int i = 1; i <= 3; i++) {
+            Jogo jogo = new Jogo();
+            jogo.setNome("Jogo Desconto " + uniqueSuffix + " " + i);
+            jogo.setCategoria("Estratégia");
+            jogo.setGenero("Família");
+            jogo.setFaixaEtariaRecomendada(12);
+            jogo.setPrecoLocacao(new BigDecimal(i == 1 ? "10.50" : i == 2 ? "20.25" : "34.25"));
+            jogo.setQuantidadeEstoque(4);
+            jogoRepository.save(jogo);
+            ids.add(jogo.getCodigoJogo());
+        }
+
+        var reserva = aluguelService.reservar(cliente.getCpf(), ids);
+
+        assertThat(reserva.getValorTotal()).isEqualTo(52.00);
     }
 
     @Test
@@ -78,11 +114,15 @@ class AluguelReservaIntegrationTest {
             jogo.setCategoria("Lógica");
             jogo.setGenero("Indefinido");
             jogo.setFaixaEtariaRecomendada(10);
+            jogo.setPrecoLocacao(new BigDecimal("35.00"));
             jogo.setQuantidadeEstoque(2);
             jogoRepository.save(jogo);
         }
 
-        List<Integer> ids = jogoRepository.findAll().stream().map(Jogo::getCodigoJogo).toList();
+        List<Integer> ids = new java.util.ArrayList<>();
+        for (Jogo jogo : jogoRepository.findAll()) {
+            ids.add(jogo.getCodigoJogo());
+        }
 
         assertThatThrownBy(() -> aluguelService.reservar(cliente.getCpf(), ids))
                 .isInstanceOf(IllegalArgumentException.class)

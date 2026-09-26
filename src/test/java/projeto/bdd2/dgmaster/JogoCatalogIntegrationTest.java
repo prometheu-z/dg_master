@@ -7,6 +7,8 @@ import projeto.bdd2.dgmaster.entity.Gerente;
 import projeto.bdd2.dgmaster.entity.Jogo;
 import projeto.bdd2.dgmaster.service.JogoService;
 
+import java.math.BigDecimal;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
@@ -27,6 +29,7 @@ class JogoCatalogIntegrationTest {
         jogo.setCategoria("Estrategia");
         jogo.setGenero("Tabuleiro");
         jogo.setFaixaEtariaRecomendada(10);
+        jogo.setPrecoLocacao(new BigDecimal("35.00"));
         jogo.setQuantidadeEstoque(5);
         jogo.setGerente(gerente);
 

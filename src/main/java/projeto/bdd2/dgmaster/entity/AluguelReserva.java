@@ -50,6 +50,9 @@ public class AluguelReserva {
     @Column(columnDefinition = "TEXT")
     private String termosDanos;
 
+    @Column(columnDefinition = "TEXT")
+    private String termosContrato;
+
     private Double precificacaoMulta;
     private LocalDateTime dataAssinatura;
 
