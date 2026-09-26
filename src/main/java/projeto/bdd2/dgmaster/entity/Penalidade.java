@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "penalidade")
@@ -25,7 +25,10 @@ public class Penalidade {
     @Column(nullable = false)
     private Double valorMulta;
 
-    private LocalDate dataFimSuspensao;
+    @Column(name = "multa_paga", nullable = false, columnDefinition = "BOOLEAN NOT NULL DEFAULT FALSE")
+    private boolean multaPaga;
+
+    private LocalDateTime dataFimSuspensao;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "aluguel_id", nullable = false)

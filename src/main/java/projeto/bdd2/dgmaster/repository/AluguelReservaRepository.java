@@ -12,4 +12,5 @@ public interface AluguelReservaRepository extends JpaRepository<AluguelReserva, 
     List<AluguelReserva> findByClienteCpfAndStatusIn(String cpf, Collection<StatusAluguel> status);
     List<AluguelReserva> findByStatus(StatusAluguel status);
     List<AluguelReserva> findByStatusAndDataLimiteRetiradaBefore(StatusAluguel status, LocalDateTime limite);
+    List<AluguelReserva> findByStatusInAndDataLimiteDevolucaoBefore(Collection<StatusAluguel> status, LocalDateTime limite);
 }

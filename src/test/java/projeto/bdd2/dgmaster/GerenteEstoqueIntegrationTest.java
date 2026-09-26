@@ -36,6 +36,7 @@ class GerenteEstoqueIntegrationTest {
         jogo.setGenero("Família");
         jogo.setFaixaEtariaRecomendada(8);
         jogo.setPrecoLocacao(new BigDecimal("35.00"));
+        jogo.setValorReposicao(new BigDecimal("100.00"));
         jogo.setQuantidadeEstoque(5);
         jogo.setGerente(gerente);
 

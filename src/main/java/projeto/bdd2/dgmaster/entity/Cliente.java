@@ -6,7 +6,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,6 +37,12 @@ public class Cliente {
 
     @Column(name = "status_conta", nullable = false)
     private boolean statusConta = true;
+
+        @Column(name = "credito_carteira", nullable = false, precision = 10, scale = 2,
+            columnDefinition = "DECIMAL(10,2) NOT NULL DEFAULT 0.00")
+        private BigDecimal creditoCarteira = BigDecimal.ZERO;
+
+        private LocalDateTime dataFimSuspensao;
 
     @OneToMany(mappedBy = "cliente")
     private List<Dependente> dependentes = new ArrayList<>();

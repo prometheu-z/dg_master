@@ -35,6 +35,9 @@ public class Jogo {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal precoLocacao;
 
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal valorReposicao;
+
     private Integer quantidadeEstoque = 0;
     private boolean statusDisponibilidade = true;
 

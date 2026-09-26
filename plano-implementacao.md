@@ -24,6 +24,7 @@
 
  • [x] Validar idade mínima do titular (18 anos ou mais) no cadastro (RN7).
  • [x] Implementar endpoints e serviços para cadastro e gestão de dependentes.
+ • [x] Implementar solicitação de reserva de dependente com aprovação do titular e retirada exclusiva pelo titular.
  • [ ] Implementar consulta da situação dos jogos e histórico do cliente (`/api/clientes/{cpf}/alugueis`).
  • [ ] Permitir que o titular consulte os aluguéis dos seus dependentes.
 
@@ -43,15 +44,17 @@
  • [x] Implementar cálculo automático de desconto progressivo por quantidade de jogos (RN6, RF05).
  • [x] Implementar cancelamento de reservas.
  • [x] Implementar retirada de jogos reservados.
+ • [x] Definir prazo de aluguel de 7 dias no serviço e permitir uma renovação de mais 7 dias.
  • [ ] Implementar endpoint de renovação única do aluguel (RF07).
 
 6. Devolução, Multa e Tarefas Agendadas / Jobs (Épico 3 e Sistema / RN1, RN3, RF08)
 
- • [ ] Implementar fluxo de devolução com registro da data real.
- • [ ] Calcular atraso e gerar `Penalidade`.
- • [ ] Suspender a conta conforme a política de atrasos (RN1).
+ • [x] Implementar fluxo de devolução com registro da data real.
+ • [x] Calcular multa diária por jogo, limitada ao valor de reposição, e gerar `Penalidade`.
+ • [x] Suspender a conta por 2 dias por dia de atraso, com reativação após o prazo e pagamento.
  • [x] Criar job `@Scheduled` para expirar reservas não retiradas após 24 horas (RN3).
- • [ ] Criar job `@Scheduled` para verificar diariamente os atrasos.
+ • [x] Criar job `@Scheduled` para verificar diariamente os atrasos e reativar contas elegíveis.
+ • [x] Converter expiração em crédito na carteira, aplicado na próxima locação.
  • [ ] Implementar visão gerencial de jogos alugados, atrasados e aguardando retirada.
 
 7. Camada de Apresentação e Notificação

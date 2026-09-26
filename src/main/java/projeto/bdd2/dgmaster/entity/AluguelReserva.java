@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,8 +25,10 @@ public class AluguelReserva {
     @Column(nullable = false)
     private LocalDateTime dataHoraReserva;
 
-    @Column(nullable = false)
+    @Column
     private LocalDateTime dataLimiteRetirada;
+
+    private LocalDateTime dataLimiteDevolucao;
 
     private LocalDateTime dataDevolucaoReal;
 
@@ -35,6 +38,9 @@ public class AluguelReserva {
 
     @Column(nullable = false)
     private Double valorTotal;
+
+    @Column(precision = 10, scale = 2)
+    private BigDecimal creditoAplicado = BigDecimal.ZERO;
 
     @Column(nullable = false)
     private Integer quantidadeRenovacoes = 0;

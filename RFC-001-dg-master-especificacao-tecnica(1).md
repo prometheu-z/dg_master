@@ -109,10 +109,10 @@ Não estão previstas, neste primeiro momento, integrações com APIs de terceir
 
 | Cód. | Regra | Descrição | Implementação sugerida |
 |---|---|---|---|
-| RN1 | Política de atrasos | Cliente que atrasa devolução sofre suspensão por tempo proporcional ao atraso + multa | `PenalidadeService`, disparada no job de checagem diária |
-| RN2 | Limite de empréstimos | Máximo de 4 jogos alugados simultaneamente, somando os dos dependentes | Validação em `AluguelService.solicitarReserva()` antes de persistir |
-| RN3 | Tempo de retirada | Reserva não retirada em 24h expira automaticamente e o valor é reembolsado | `ReservaExpirationJob` (Spring `@Scheduled`, roda a cada hora) |
-| RN4 | Contrato de aluguel | Todo aluguel exige contrato com termos de dano e valor de multa por atraso | Campos de contrato embutidos na entidade `AluguelReserva` |
+| RN1 | Política de atrasos | Multa de R$ 5,00 por jogo por dia iniciado de atraso, limitada ao valor de reposição de cada jogo. Suspensão de 2 dias por dia iniciado de atraso, começando na devolução. Reativar somente após o fim da suspensão e pagamento integral da multa. | `PenalidadeService`, com verificação diária e reativação automática |
+| RN2 | Limite de empréstimos | Máximo de 4 jogos ativos somando titular e dependentes, nos status `RESERVADO`, `RETIRADO` ou `ATRASADO`. Solicitações de dependentes aguardam aprovação do titular. | Validação em `AluguelService` antes da reserva/aprovação |
+| RN3 | Tempo de retirada | Reserva aprovada não retirada em 24h expira automaticamente e seu valor vira crédito em carteira para a próxima locação. | `ReservaExpirationJob` (Spring `@Scheduled`, roda a cada hora) |
+| RN4 | Contrato de aluguel | Todo aluguel registra aceite digital dos termos de guarda, danos, reposição e multa por atraso. | Campos de contrato embutidos na entidade `AluguelReserva` |
 | RN5 | Tempo de atividade | Sistema deve estar no ar 24x7 | Requisito de infraestrutura/deploy, fora do código de negócio |
 | RN6 | Política de fidelidade | Desconto progressivo por múltiplos jogos alugados | `DescontoService.calcularDesconto(quantidadeJogos)` |
 | RN7 | Elegibilidade | Cliente titular deve ter 18 anos completos ou mais | Validação em `ClienteService.cadastrar()`, calculada a partir de `dataNascimento` |
@@ -164,6 +164,8 @@ Não estão previstas, neste primeiro momento, integrações com APIs de terceir
 | senha | VARCHAR | hash (BCrypt), nunca texto puro |
 | dataNascimento | DATE | usada para validar RN7 |
 | statusConta | BOOLEAN | ativo/suspenso (RN1) |
+| creditoCarteira | DECIMAL(10,2) | crédito de reembolsos por expiração, abatido após o desconto na próxima locação |
+| dataFimSuspensao | DATETIME | instante em que termina a suspensão (RN1) |
 
 ### 7.2. Dependente
 | Campo | Tipo | Observação |
@@ -190,6 +192,7 @@ Não estão previstas, neste primeiro momento, integrações com APIs de terceir
 | genero | VARCHAR | |
 | faixaEtariaRecomendada | INTEGER | |
 | precoLocacao | DECIMAL(10,2) | preço definido pelo gerente para locação do jogo |
+| valorReposicao | DECIMAL(10,2) | valor de reposição no mercado; teto da multa por atraso |
 | quantidadeEstoque | INTEGER | |
 | statusDisponibilidade | BOOLEAN | |
 | gerenteId | INTEGER | **FK** → Gerente (quem cadastrou/gerencia) |
@@ -199,16 +202,22 @@ Não estão previstas, neste primeiro momento, integrações com APIs de terceir
 |---|---|---|
 | idAluguel | INTEGER | **PK**, auto-incremento |
 | dataHoraReserva | DATETIME | |
-| dataLimiteRetirada | DATETIME | dataHoraReserva + 24h (RN3) |
+| dataLimiteRetirada | DATETIME | prazo de 24h aplicado apenas em `RESERVADO`; a aprovação define/reinicia o prazo (RN3) |
+| dataLimiteDevolucao | DATETIME | retirada + 7 dias corridos, acrescida de 7 dias na única renovação (RF07) |
 | dataDevolucaoReal | DATETIME | nulo até devolução |
-| status | VARCHAR/ENUM | `RESERVADO`, `RETIRADO`, `DEVOLVIDO`, `ATRASADO`, `EXPIRADO`, `CANCELADO` |
+| status | VARCHAR/ENUM | `AGUARDANDO_APROVACAO`, `RESERVADO`, `RETIRADO`, `DEVOLVIDO`, `ATRASADO`, `EXPIRADO`, `CANCELADO` |
 | valorTotal | DOUBLE | após aplicar desconto (RN6) |
+| creditoAplicado | DECIMAL(10,2) | parcela do crédito em carteira usada nesta locação |
 | quantidadeRenovacoes | INTEGER | máx. 1 (RF07) |
 | clienteCpf | VARCHAR(11) | **FK** → Cliente |
 | dependenteId | INTEGER | **FK** → Dependente, nulo se for o próprio titular |
-| termosDanos | VARCHAR/TEXT | cláusula do contrato (RN4) |
-| precificacaoMulta | VARCHAR/DOUBLE | valor de multa por atraso |
+| termosDanos | VARCHAR/TEXT | cláusula do contrato, incluindo multa diária de R$ 5,00 por jogo e responsabilidade por reposição (RN4) |
+| precificacaoMulta | DECIMAL(10,2) | multa acumulada do aluguel, limitada individualmente pelo valor de reposição de cada jogo |
 | dataAssinatura | DATETIME | data de aceite do contrato |
+
+Texto do contrato (RN4):
+
+> "Ao realizar a retirada do(s) jogo(s) descrito(s) neste aluguel, o Locatário titular assume total responsabilidade civil e financeira pela guarda, conservação e integridade de todos os componentes (tabuleiro, cartas, peças, manuais e caixa). Em caso de perda, extravio ou dano que inviabilize o uso do produto, o Locatário concorda em arcar com o valor integral de reposição do jogo de tabuleiro. A devolução fora do prazo estipulado implica em multa diária de R$ 5,00 por item e suspensão temporária da plataforma. O aceite digital deste termo possui validade legal e vinculativa para a DG Master LTDA."
 
 ### 7.6. Contém (tabela associativa Jogo ↔ AluguelReserva, N:N)
 | Campo | Tipo |
@@ -221,8 +230,9 @@ Não estão previstas, neste primeiro momento, integrações com APIs de terceir
 |---|---|---|
 | idPenalidade | INTEGER | **PK**, auto-incremento |
 | tipoPenalidade | VARCHAR | ex. "multa", "suspensão" |
-| valorMulta | DOUBLE | |
-| dataFimSuspensao | DATE | |
+| valorMulta | DECIMAL(10,2) | soma das multas individuais dos jogos |
+| multaPaga | BOOLEAN | falso até baixa integral do pagamento |
+| dataFimSuspensao | DATETIME | instante de término da suspensão, contado desde a devolução |
 | aluguelId | INTEGER | **FK** → AluguelReserva |
 
 ---
@@ -236,7 +246,9 @@ CREATE TABLE cliente (
   email VARCHAR(150) NOT NULL UNIQUE,
   senha VARCHAR(255) NOT NULL,
   data_nascimento DATE NOT NULL,
-  status_conta BOOLEAN NOT NULL DEFAULT TRUE
+  status_conta BOOLEAN NOT NULL DEFAULT TRUE,
+  credito_carteira DECIMAL(10,2) NOT NULL DEFAULT 0,
+  data_fim_suspensao DATETIME
 );
 
 CREATE TABLE gerente (
@@ -261,6 +273,7 @@ CREATE TABLE jogo (
   genero VARCHAR(100),
   faixa_etaria_recomendada INT,
   preco_locacao DECIMAL(10,2) NOT NULL,
+  valor_reposicao DECIMAL(10,2) NOT NULL,
   quantidade_estoque INT NOT NULL DEFAULT 0,
   status_disponibilidade BOOLEAN NOT NULL DEFAULT TRUE,
   gerente_id INT,
@@ -270,14 +283,17 @@ CREATE TABLE jogo (
 CREATE TABLE aluguel_reserva (
   id_aluguel INT AUTO_INCREMENT PRIMARY KEY,
   data_hora_reserva DATETIME NOT NULL,
-  data_limite_retirada DATETIME NOT NULL,
+  data_limite_retirada DATETIME NULL,
+  data_limite_devolucao DATETIME NULL,
   data_devolucao_real DATETIME NULL,
-  status VARCHAR(20) NOT NULL,
+  status VARCHAR(30) NOT NULL,
   valor_total DOUBLE NOT NULL,
+  credito_aplicado DECIMAL(10,2) NOT NULL DEFAULT 0,
   quantidade_renovacoes INT NOT NULL DEFAULT 0,
   cliente_cpf VARCHAR(11) NOT NULL,
   dependente_id INT NULL,
   termos_danos TEXT,
+  termos_contrato TEXT,
   precificacao_multa DOUBLE,
   data_assinatura DATETIME,
   FOREIGN KEY (cliente_cpf) REFERENCES cliente(cpf),
@@ -295,8 +311,9 @@ CREATE TABLE contem (
 CREATE TABLE penalidade (
   id_penalidade INT AUTO_INCREMENT PRIMARY KEY,
   tipo_penalidade VARCHAR(50) NOT NULL,
-  valor_multa DOUBLE NOT NULL,
-  data_fim_suspensao DATE,
+  valor_multa DECIMAL(10,2) NOT NULL,
+  multa_paga BOOLEAN NOT NULL DEFAULT FALSE,
+  data_fim_suspensao DATETIME,
   aluguel_id INT NOT NULL,
   FOREIGN KEY (aluguel_id) REFERENCES aluguel_reserva(id_aluguel)
 );
@@ -330,6 +347,7 @@ CREATE TABLE penalidade (
 - `POST /api/alugueis` — RF03, HU06 (valida RN2, RN7, gera contrato RN4)
 - `DELETE /api/alugueis/{id}` — cancelar reserva (RF03)
 - `PUT /api/alugueis/{id}/retirar` — muda status para RETIRADO
+- `PUT /api/alugueis/{id}/aprovar` — titular aprova solicitação de dependente; inicia janela de 24h
 - `PUT /api/alugueis/{id}/renovar` — RF07 (valida `quantidadeRenovacoes < 1`)
 - `PUT /api/alugueis/{id}/devolver` — registra `dataDevolucaoReal`, calcula atraso (RN1)
 - `GET /api/alugueis?status=&clienteCpf=` — uso do gerente (RF08)
@@ -339,7 +357,7 @@ CREATE TABLE penalidade (
 - `GET /api/gerente/prazos` — RF08
 
 ### Jobs internos (sem endpoint, executados via `@Scheduled`)
-- Expiração de reserva não retirada em 24h (RN3) → reembolso
+- Expiração de reserva não retirada em 24h (RN3) → crédito em carteira, abatido após o desconto na próxima locação
 - Verificação diária de atraso → gera `Penalidade` e suspende `Cliente` (RN1)
 
 ---
@@ -438,4 +456,4 @@ CREATE TABLE penalidade (
 
 - Definir provedor de e-mail (SMTP) a ser usado em **produção** (Mailtrap cobre apenas dev/testes, ver 2.5).
 - Definir se `status` das entidades será `VARCHAR` ou `ENUM` no MySQL (sugestão: `VARCHAR` + enum Java, mais flexível para migrações).
-- Confirmar regra exata de cálculo de multa/suspensão em RN1 (proporcionalidade não detalhada nos documentos originais).
+- Definir o provedor de pagamento/baixa externa da multa. Até essa integração existir, a baixa deve ser registrada por operação administrativa autenticada.
