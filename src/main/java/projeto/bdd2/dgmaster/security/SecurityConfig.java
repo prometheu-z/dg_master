@@ -65,8 +65,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/login", "/cadastro", "/catalogo", "/catalogo/**",
                             "/css/**", "/js/**", "/webjars/**", "/api/auth/**").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/jogos/**").permitAll()
-                        .requestMatchers("/api/gerente/**").hasRole("GERENTE")
+                        .requestMatchers("/api/gerente/**", "/api/estatisticas/**").hasRole("GERENTE")
                         .requestMatchers("/api/clientes/**", "/api/alugueis/**").hasAnyRole("CLIENTE", "GERENTE")
                         .anyRequest().authenticated())
                 .formLogin(form -> form

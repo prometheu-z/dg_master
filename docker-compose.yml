@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: dgmaster-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-G0rg0nz0l@}
+      MYSQL_DATABASE: db_master
+      MYSQL_USER: ${DB_USERNAME:-root}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-G0rg0nz0l@}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - dgmaster-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dgmaster-app
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/db_master?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      DB_USERNAME: ${DB_USERNAME:-root}
+      DB_PASSWORD: ${DB_PASSWORD:-G0rg0nz0l@}
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - dgmaster-network
+
+volumes:
+  mysql-data:
+
+networks:
+  dgmaster-network:
+    driver: bridge

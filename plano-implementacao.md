@@ -62,7 +62,7 @@
  • [x] Criar job `@Scheduled` para verificar diariamente os atrasos e reativar contas elegíveis.
  • [x] Converter expiração em crédito na carteira, aplicado na próxima locação.
  • [x] Implementar endpoint gerencial de prazos para reservas, retiradas e atrasos.
- • [ ] Implementar relatórios de rentabilidade com preço histórico por jogo.
+ • [x] Implementar relatórios de rentabilidade com preço histórico por jogo (RF10).
 
 7. Camada de Apresentação e Notificação
 
@@ -71,11 +71,11 @@
  • [x] Implementar telas de cadastro, login, reservas, aluguéis, devoluções e baixa de multas.
  • [x] Manter e-mail/notificações fora do MVP, conforme decisão de escopo.
  • [x] Implementar painel operacional do Gerente para jogos, prazos e multas.
- • [ ] Criar dashboard e relatórios estatísticos do Gerente (RF10).
+ • [x] Criar dashboard e relatórios estatísticos do Gerente (RF10).
 
 8. Testes e Qualidade
 
- • [ ] Criar testes unitários para as regras RN1 a RN7.
+ • [x] Criar testes unitários para as regras RN1 a RN7.
  • [x] Criar testes de integração para repositories e serviços.
  • [x] Criar testes de integração dos endpoints de catálogo, dependentes, aluguéis e fluxos de autenticação existentes.
  • [ ] Validar critérios de aceitação das histórias HU01 a HU12.
@@ -83,10 +83,10 @@
 
 9. Infraestrutura e Documentação
 
- • [ ] Configurar conexão MySQL por variáveis de ambiente, sem credenciais no repositório.
+ • [x] Configurar conexão MySQL por variáveis de ambiente, sem credenciais no repositório.
  • [ ] Definir estratégia de inicialização do banco: `schema.sql` ou Flyway/Liquibase.
- • [ ] Configurar Docker para desenvolvimento e homologação.
- • [ ] Adicionar documentação interativa com springdoc/OpenAPI.
+ • [x] Configurar Docker para desenvolvimento e homologação.
+ • [x] Adicionar documentação interativa com springdoc/OpenAPI.
  • [x] Atualizar a RFC conforme as decisões de implementação.
 
 Ordem sugerida de execução:

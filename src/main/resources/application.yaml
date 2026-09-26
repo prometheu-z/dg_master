@@ -3,9 +3,9 @@ spring:
     name: dgmaster
 
   datasource:
-    url: jdbc:mysql://localhost:3306/db_master?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-    username: root
-    password: "G0rg0nz0l@"
+    url: ${DB_URL:jdbc:mysql://localhost:3306/db_master?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:G0rg0nz0l@}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:

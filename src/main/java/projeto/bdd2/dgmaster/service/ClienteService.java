@@ -1,5 +1,6 @@
 package projeto.bdd2.dgmaster.service;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import projeto.bdd2.dgmaster.entity.Cliente;
@@ -10,16 +11,43 @@ import projeto.bdd2.dgmaster.repository.DependenteRepository;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ClienteService {
 
     private final ClienteRepository clienteRepository;
     private final DependenteRepository dependenteRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public ClienteService(ClienteRepository clienteRepository, DependenteRepository dependenteRepository) {
+    public ClienteService(ClienteRepository clienteRepository, DependenteRepository dependenteRepository, PasswordEncoder passwordEncoder) {
         this.clienteRepository = clienteRepository;
         this.dependenteRepository = dependenteRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    @Transactional
+    public Cliente cadastrar(Cliente cliente) {
+        if (cliente.getEmail() == null || cliente.getEmail().isBlank()) {
+            throw new IllegalArgumentException("E-mail obrigatório");
+        }
+
+        if (clienteRepository.findByEmail(cliente.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("E-mail já cadastrado");
+        }
+
+        if (clienteRepository.findById(cliente.getCpf()).isPresent()) {
+            throw new IllegalArgumentException("CPF já cadastrado");
+        }
+
+        if (Period.between(cliente.getDataNascimento(), LocalDate.now()).getYears() < 18) {
+            throw new IllegalArgumentException("Cliente deve ter 18 anos ou mais");
+        }
+
+        cliente.setSenha(passwordEncoder.encode(cliente.getSenha()));
+        cliente.setStatusConta(true);
+        cliente.setCreditoCarteira(cliente.getCreditoCarteira() != null ? cliente.getCreditoCarteira() : java.math.BigDecimal.ZERO);
+        return clienteRepository.save(cliente);
     }
 
     @Transactional(readOnly = true)
