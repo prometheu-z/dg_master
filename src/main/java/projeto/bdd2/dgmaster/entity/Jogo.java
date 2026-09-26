@@ -40,6 +40,7 @@ public class Jogo {
 
     private Integer quantidadeEstoque = 0;
     private boolean statusDisponibilidade = true;
+    private boolean ativoCatalogo = true;
 
     @ManyToOne
     @JoinColumn(name = "gerente_id")

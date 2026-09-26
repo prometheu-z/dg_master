@@ -140,9 +140,9 @@ Não estão previstas, neste primeiro momento, integrações com APIs de terceir
 
 | Cód. | Tipo | Descrição | Implementação sugerida |
 |---|---|---|---|
-| RNF01 | Segurança | Dados armazenados e transmitidos de forma criptografada | HTTPS/TLS em produção; senha com `BCryptPasswordEncoder` |
+| RNF01 | Segurança | Dados armazenados e transmitidos de forma criptografada e operações autenticadas protegidas contra CSRF e fixação de sessão | HTTPS/TLS em produção; senha com `BCryptPasswordEncoder`; token CSRF em operações de escrita; salvar o contexto autenticado em sessão e rotacionar o ID no login |
 | RNF02 | Usabilidade | Interface responsiva | Bootstrap (grid + componentes responsivos) |
-| RNF03 | Segurança | Autenticação de dois fatores (2FA) opcional | Spring Security + TOTP (ex. biblioteca `java-otp`) ou código por e-mail |
+| RNF03 | Segurança | Autenticação de dois fatores (2FA) opcional | Pendente: configurar TOTP ou código por e-mail e validar o desafio antes de declarar autenticação concluída |
 | RNF04 | Compatibilidade/Escalabilidade | Suportar usuários simultâneos mantendo desempenho em operações críticas | Índices em CPF/e-mail, connection pool (HikariCP), paginação nas listagens |
 | RNF05 | Produto | Catálogo organizado com filtros | Endpoints com query params + índices em `genero`, `faixaEtariaRecomendada` |
 | RNF06 | Compatibilidade | Funcionar em navegadores Chromium/WebKit | Evitar recursos exclusivos de outros engines no front-end |
@@ -224,6 +224,7 @@ Texto do contrato (RN4):
 |---|---|
 | jogoCodigo | **FK** → Jogo |
 | aluguelId | **FK** → AluguelReserva |
+| precoLocacaoNoAluguel | DECIMAL(10,2) | preço unitário congelado no momento da reserva; base para relatórios históricos de rentabilidade |
 
 ### 7.7. Penalidade
 | Campo | Tipo | Observação |
@@ -303,6 +304,7 @@ CREATE TABLE aluguel_reserva (
 CREATE TABLE contem (
   jogo_codigo INT NOT NULL,
   aluguel_id INT NOT NULL,
+  preco_locacao_no_aluguel DECIMAL(10,2) NOT NULL,
   PRIMARY KEY (jogo_codigo, aluguel_id),
   FOREIGN KEY (jogo_codigo) REFERENCES jogo(codigo_jogo),
   FOREIGN KEY (aluguel_id) REFERENCES aluguel_reserva(id_aluguel)
@@ -331,26 +333,27 @@ CREATE TABLE penalidade (
 - `POST /api/auth/2fa/verificar` — RNF03
 
 ### Cliente / Dependente
-- `GET /api/clientes/{cpf}`
-- `POST /api/clientes/{cpf}/dependentes` — RF04, HU03
-- `GET /api/clientes/{cpf}/dependentes`
-- `GET /api/clientes/{cpf}/alugueis` — RF02, HU02 (retorna vazio → mensagem "Você não possui jogos alugados ou reservados no momento")
+- `GET /api/clientes/{cpf}` — autenticado, somente o próprio titular
+- `POST /api/clientes/{cpf}/dependentes` — autenticado, somente o titular; RF04, HU03
+- `GET /api/clientes/{cpf}/dependentes` — autenticado, somente o titular
+- `GET /api/clientes/{cpf}/alugueis` — autenticado, somente o titular; inclui seus dependentes (RF02, HU02)
 
 ### Catálogo
-- `GET /api/jogos?genero=&faixaEtaria=&categoria=` — RF06, HU04 (resposta em até 2s, CA01)
+- `GET /api/jogos?genero=&faixaEtaria=&categoria=` — público, RF06, HU04 (resposta em até 2s, CA01)
 - `GET /api/jogos/{codigo}`
-- `POST /api/jogos` — RF09, HU05 (Gerente)
-- `PUT /api/jogos/{codigo}` — RF09
-- `DELETE /api/jogos/{codigo}` — RF09, HU05 CA01/CA02 (bloquear exclusão se houver cópia alugada/reservada)
+- `POST /api/jogos` — somente Gerente, RF09, HU05
+- `PUT /api/jogos/{codigo}` — somente Gerente, RF09
+- `DELETE /api/jogos/{codigo}` — somente Gerente; desativa do catálogo e preserva histórico; bloqueia enquanto reservado/alugado (RF09, HU05 CA01/CA02)
 
 ### Aluguel / Reserva
-- `POST /api/alugueis` — RF03, HU06 (valida RN2, RN7, gera contrato RN4)
-- `DELETE /api/alugueis/{id}` — cancelar reserva (RF03)
-- `PUT /api/alugueis/{id}/retirar` — muda status para RETIRADO
-- `PUT /api/alugueis/{id}/aprovar` — titular aprova solicitação de dependente; inicia janela de 24h
-- `PUT /api/alugueis/{id}/renovar` — RF07 (valida `quantidadeRenovacoes < 1`)
-- `PUT /api/alugueis/{id}/devolver` — registra `dataDevolucaoReal`, calcula atraso (RN1)
-- `GET /api/alugueis?status=&clienteCpf=` — uso do gerente (RF08)
+- `POST /api/alugueis` — Cliente autenticado; `idDependente` opcional; valida RN2/RN7 e gera contrato RN4
+- `DELETE /api/alugueis/{id}` — titular cancela a própria reserva (RF03)
+- `PUT /api/alugueis/{id}/retirar` — somente titular; muda status para RETIRADO
+- `PUT /api/alugueis/{id}/aprovar` — titular aprova solicitação registrada para dependente; inicia janela de 24h
+- `PUT /api/alugueis/{id}/renovar` — titular, RF07 (uma única extensão de 7 dias)
+- `PUT /api/alugueis/{id}/devolver` — Gerente registra `dataDevolucaoReal`, calcula atraso (RN1)
+- `GET /api/alugueis?status=&clienteCpf=` — somente Gerente (RF08)
+- `PUT /api/gerente/penalidades/{id}/pagamento` — gerente registra a baixa da multa recebida fora do sistema; reavalia reativação da conta
 
 ### Gerente / Relatórios
 - `GET /api/gerente/estatisticas` — RF10, HU (mais/menos alugados, mais/menos rentáveis)
@@ -457,3 +460,6 @@ CREATE TABLE penalidade (
 - Definir provedor de e-mail (SMTP) a ser usado em **produção** (Mailtrap cobre apenas dev/testes, ver 2.5).
 - Definir se `status` das entidades será `VARCHAR` ou `ENUM` no MySQL (sugestão: `VARCHAR` + enum Java, mais flexível para migrações).
 - Definir o provedor de pagamento/baixa externa da multa. Até essa integração existir, a baixa deve ser registrada por operação administrativa autenticada.
+- Definir autenticação do Dependente: o modelo atual não possui credenciais/identidade autenticável para que ele solicite a reserva independentemente do titular.
+- Definir se a solicitação de reserva de dependente será registrada pelo titular em nome dele (com aprovação explícita posterior) ou se Dependente receberá conta e autenticação próprias.
+- Implementar snapshot de `precoLocacaoNoAluguel` na associação `contem` antes de produzir os rankings históricos de rentabilidade de RF10.

@@ -84,6 +84,9 @@ public class AluguelService {
         for (Integer idJogo : idsJogos) {
             Jogo jogo = jogoRepository.findById(idJogo)
                     .orElseThrow(() -> new IllegalArgumentException("Jogo não encontrado: " + idJogo));
+            if (!jogo.isAtivoCatalogo()) {
+                throw new IllegalArgumentException("Jogo não encontrado no catálogo: " + idJogo);
+            }
             if (jogo.getQuantidadeEstoque() <= 0) {
                 throw new IllegalArgumentException("Jogo indisponível no estoque: " + jogo.getNome());
             }
@@ -264,6 +267,14 @@ public class AluguelService {
         }
         aluguelReservaRepository.saveAll(atrasados);
         return atrasados.size();
+    }
+
+    @Transactional(readOnly = true)
+    public List<AluguelReserva> listarPrazosGerenciais() {
+        return aluguelReservaRepository.findByStatusIn(List.of(
+                StatusAluguel.RESERVADO,
+                StatusAluguel.RETIRADO,
+                StatusAluguel.ATRASADO));
     }
 
     private Penalidade atualizarPenalidadeAtraso(AluguelReserva reserva, long diasAtraso) {

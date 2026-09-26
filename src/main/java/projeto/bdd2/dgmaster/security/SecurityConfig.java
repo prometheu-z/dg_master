@@ -5,14 +5,19 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.security.web.authentication.session.ChangeSessionIdAuthenticationStrategy;
+import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
 
 @Configuration
 @EnableWebSecurity
@@ -43,11 +48,23 @@ public class SecurityConfig {
     }
 
     @Bean
+    public SecurityContextRepository securityContextRepository() {
+        return new HttpSessionSecurityContextRepository();
+    }
+
+    @Bean
+    public SessionAuthenticationStrategy sessionAuthenticationStrategy() {
+        return new ChangeSessionIdAuthenticationStrategy();
+    }
+
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable)
+            .securityContext(context -> context.securityContextRepository(securityContextRepository()))
+                .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/login", "/css/**", "/js/**", "/webjars/**", "/api/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/jogos/**").permitAll()
                         .requestMatchers("/api/gerente/**").hasRole("GERENTE")
                         .requestMatchers("/api/clientes/**", "/api/alugueis/**").hasAnyRole("CLIENTE", "GERENTE")
                         .anyRequest().authenticated())

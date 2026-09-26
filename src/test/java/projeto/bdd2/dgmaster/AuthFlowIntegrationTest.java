@@ -13,6 +13,7 @@ import projeto.bdd2.dgmaster.entity.Cliente;
 import projeto.bdd2.dgmaster.repository.ClienteRepository;
 
 import java.util.UUID;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -45,5 +46,13 @@ class AuthFlowIntegrationTest {
         assertThat(cliente.getCpf()).isEqualTo(cpf);
         assertThat(passwordEncoder.matches("Senha@123", cliente.getSenha())).isTrue();
         assertThat(cliente.getSenha()).isNotEqualTo("Senha@123");
+    }
+
+    @Test
+    void shouldNotClaimTwoFactorWasValidatedWithoutAConfiguredVerifier() {
+        ResponseEntity<Map<String, String>> response = authController.verificarDoisFatores(Map.of("codigo", "123456"));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_IMPLEMENTED);
+        assertThat(response.getBody()).containsEntry("mensagem", "A validação 2FA ainda não está configurada.");
     }
 }
