@@ -270,6 +270,17 @@ public class WebMvpController {
                 "Retirada registrada. O prazo de devolução é de sete dias.");
     }
 
+    @PostMapping("/cliente/alugueis/{id}/devolver")
+    @PreAuthorize("hasRole('CLIENTE')")
+    public String devolverCliente(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Integer id,
+            RedirectAttributes redirectAttributes) {
+        exigirTipo(principal, "CLIENTE");
+        return executarAcao(redirectAttributes, () -> aluguelService.devolver(id, LocalDateTime.now()),
+                "/cliente", "Devolução registrada.");
+    }
+
     @PostMapping("/cliente/alugueis/{id}/renovar")
     @PreAuthorize("hasRole('CLIENTE')")
     public String renovar(
