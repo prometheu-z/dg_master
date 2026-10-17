@@ -23,9 +23,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
+@SpringBootTest(properties = "dgmaster.admin.chave-cadastro-gerente=chave-teste")
 @AutoConfigureMockMvc
 class AuthControllerIntegrationTest {
+
+    private static final String CHAVE_ADMIN = "chave-teste";
 
     @Autowired
     private MockMvc mockMvc;
@@ -42,7 +44,7 @@ class AuthControllerIntegrationTest {
     @Test
     void apiLoginPersistsAuthenticationForSubsequentRequests() throws Exception {
         Cliente cliente = new Cliente();
-        cliente.setCpf("102938475" + String.format("%02d", Math.abs(UUID.randomUUID().hashCode()) % 90 + 10));
+        cliente.setCpf(cpfUnico());
         cliente.setNome("Cliente Login API");
         cliente.setEmail("login." + UUID.randomUUID() + "@teste.com");
         cliente.setSenha(passwordEncoder.encode("Senha@123"));
@@ -65,7 +67,7 @@ class AuthControllerIntegrationTest {
 
     @Test
     void cadastroClienteCriaClienteComSucesso() throws Exception {
-        String cpf = "987654321" + String.format("%02d", Math.abs(UUID.randomUUID().hashCode()) % 90 + 10);
+        String cpf = cpfUnico();
         String email = "cliente.novo." + UUID.randomUUID() + "@teste.com";
 
         mockMvc.perform(post("/api/auth/cadastro")
@@ -78,16 +80,58 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
+    void cadastroClienteRejeitaSenhaFraca() throws Exception {
+        String cpf = cpfUnico();
+        String email = "cliente.fraca." + UUID.randomUUID() + "@teste.com";
+
+        mockMvc.perform(post("/api/auth/cadastro")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"cpf\":\"" + cpf + "\",\"nome\":\"Cliente Fraco\",\"email\":\"" + email + "\",\"senha\":\"senha123\",\"dataNascimento\":\"1990-01-01\"}"))
+                .andExpect(status().isBadRequest());
+
+        assertThat(clienteRepository.findByEmail(email)).isEmpty();
+    }
+
+    @Test
+    void cadastroClienteRejeitaMenorDeIdade() throws Exception {
+        String cpf = cpfUnico();
+        String email = "cliente.menor." + UUID.randomUUID() + "@teste.com";
+        String nascimento = LocalDate.now().minusYears(15).toString();
+
+        mockMvc.perform(post("/api/auth/cadastro")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"cpf\":\"" + cpf + "\",\"nome\":\"Cliente Menor\",\"email\":\"" + email + "\",\"senha\":\"Senha@123\",\"dataNascimento\":\"" + nascimento + "\"}"))
+                .andExpect(status().isBadRequest());
+
+        assertThat(clienteRepository.findByEmail(email)).isEmpty();
+    }
+
+    @Test
     void cadastroGerenteCriaGerenteComSucesso() throws Exception {
         String email = "gerente.novo." + UUID.randomUUID() + "@teste.com";
 
         mockMvc.perform(post("/api/auth/cadastro-gerente")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"nome\":\"Gerente Novo\",\"email\":\"" + email + "\",\"senha\":\"Senha@123\"}"))
+                        .content("{\"nome\":\"Gerente Novo\",\"email\":\"" + email + "\",\"senha\":\"Senha@123\",\"chaveAdmin\":\"" + CHAVE_ADMIN + "\"}"))
                 .andExpect(status().isCreated());
 
         assertThat(gerenteRepository.findByEmail(email)).isPresent();
+    }
+
+    @Test
+    void cadastroGerenteSemChaveValidaRetornaForbidden() throws Exception {
+        String email = "gerente.semchave." + UUID.randomUUID() + "@teste.com";
+
+        mockMvc.perform(post("/api/auth/cadastro-gerente")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nome\":\"Gerente Sem Chave\",\"email\":\"" + email + "\",\"senha\":\"Senha@123\"}"))
+                .andExpect(status().isForbidden());
+
+        assertThat(gerenteRepository.findByEmail(email)).isEmpty();
     }
 
     @Test
@@ -95,7 +139,7 @@ class AuthControllerIntegrationTest {
         String email = "cliente.duplicado." + UUID.randomUUID() + "@teste.com";
 
         Cliente cliente = new Cliente();
-        cliente.setCpf("11122233344");
+        cliente.setCpf(cpfUnico());
         cliente.setNome("Cliente Duplicado");
         cliente.setEmail(email);
         cliente.setSenha(passwordEncoder.encode("Senha@123"));
@@ -106,7 +150,7 @@ class AuthControllerIntegrationTest {
         mockMvc.perform(post("/api/auth/cadastro")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"cpf\":\"55566677788\",\"nome\":\"Outro Cliente\",\"email\":\"" + email + "\",\"senha\":\"Senha@123\",\"dataNascimento\":\"1990-01-01\"}"))
+                        .content("{\"cpf\":\"" + cpfUnico() + "\",\"nome\":\"Outro Cliente\",\"email\":\"" + email + "\",\"senha\":\"Senha@123\",\"dataNascimento\":\"1990-01-01\"}"))
                 .andExpect(status().isConflict());
     }
 
@@ -123,7 +167,12 @@ class AuthControllerIntegrationTest {
         mockMvc.perform(post("/api/auth/cadastro-gerente")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"nome\":\"Outro Gerente\",\"email\":\"" + email + "\",\"senha\":\"Senha@123\"}"))
+                        .content("{\"nome\":\"Outro Gerente\",\"email\":\"" + email + "\",\"senha\":\"Senha@123\",\"chaveAdmin\":\"" + CHAVE_ADMIN + "\"}"))
                 .andExpect(status().isConflict());
+    }
+
+    private static String cpfUnico() {
+        long numero = Math.floorMod(java.util.concurrent.ThreadLocalRandom.current().nextLong(), 100_000_000_000L);
+        return String.format("%011d", numero);
     }
 }

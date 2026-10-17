@@ -333,6 +333,7 @@ CREATE TABLE penalidade (
 ### Autenticação
 - `POST /api/auth/cadastro` — RF01, CA01/CA02/CA03 da HU01
 - `POST /api/auth/login`
+- `POST /api/auth/cadastro-gerente` — criação de conta de Gerente, operação administrativa protegida por chave (`DGMASTER_ADMIN_KEY`); responde `403 Forbidden` sem chave válida ou quando a chave não está configurada
 - `POST /api/auth/2fa/verificar` — placeholder que retorna `501 Not Implemented`; não valida nem habilita 2FA (evolução futura RNF03)
 
 ### Cliente / Dependente

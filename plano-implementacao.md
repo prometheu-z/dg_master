@@ -21,13 +21,15 @@
  • [x] Proteger operações de escrita com CSRF em autenticação por sessão.
  • [x] Persistir sessão no login REST e rotacionar o identificador da sessão.
  • [x] Implementar endpoints de login e cadastro (`/api/auth/cadastro`).
+ • [x] Validar política de senha forte (≥8, letras, números e 1 caractere especial) no cadastro (HU01).
+ • [x] Exigir chave de administrador (`DGMASTER_ADMIN_KEY`) para criar contas de Gerente.
  • [ ] Implementar validação real de 2FA (`/api/auth/2fa/verificar`); a rota responde `501` enquanto não há verificador configurado.
  • [x] Aplicar autorização por perfil para Cliente e Gerente.
  • [x] Usar gestão centralizada pelo titular; Dependente não possui login próprio.
 
 3. Módulo do Cliente e Dependentes (Épico 1 / RF01, RF02, RF04, RN7)
 
- • [x] Validar idade mínima do titular (18 anos ou mais) no cadastro (RN7).
+ • [x] Validar idade mínima do titular (18 anos ou mais) no cadastro (RN7), aplicada em `ClienteService.cadastrar()`; o endpoint `/api/auth/cadastro` delega ao serviço.
  • [x] Implementar serviços para cadastro e gestão de dependentes.
  • [x] Implementar endpoints autenticados para cadastro e gestão de dependentes.
  • [x] Permitir ao titular selecionar um dependente ao reservar; a reserva é confirmada no mesmo ato e só o titular pode retirar.
@@ -84,7 +86,7 @@
 9. Infraestrutura e Documentação
 
  • [x] Configurar conexão MySQL por variáveis de ambiente, sem credenciais no repositório.
- • [ ] Definir estratégia de inicialização do banco: `schema.sql` ou Flyway/Liquibase.
+ • [ ] Definir estratégia de inicialização do banco: hoje `schema.sql` é o DDL de referência (HU10) e o runtime usa `ddl-auto=update`; migrações versionadas (Flyway/Liquibase) permanecem pendentes.
  • [x] Configurar Docker para desenvolvimento e homologação.
  • [x] Adicionar documentação interativa com springdoc/OpenAPI.
  • [x] Atualizar a RFC conforme as decisões de implementação.

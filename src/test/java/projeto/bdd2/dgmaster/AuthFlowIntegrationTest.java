@@ -31,7 +31,8 @@ class AuthFlowIntegrationTest {
 
     @Test
     void shouldRegisterClientAndHashPassword() {
-        String cpf = "123456789" + String.format("%02d", Math.abs(UUID.randomUUID().hashCode()) % 100);
+        String cpf = String.format("%011d",
+                Math.floorMod(java.util.concurrent.ThreadLocalRandom.current().nextLong(), 100_000_000_000L));
         String email = "cliente.auth." + UUID.randomUUID() + "@test.com";
 
         ResponseEntity<AuthResponse> response = authController.cadastrarCliente(

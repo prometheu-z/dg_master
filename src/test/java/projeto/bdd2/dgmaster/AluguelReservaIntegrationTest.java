@@ -52,7 +52,7 @@ class AluguelReservaIntegrationTest {
     @Test
     void shouldReserveGamesForClientWithinLimit() {
         Cliente cliente = new Cliente();
-        cliente.setCpf("333444555" + String.format("%02d", Math.abs(UUID.randomUUID().hashCode()) % 90 + 10));
+        cliente.setCpf(cpfUnico());
         cliente.setNome("Cliente Reserva");
         cliente.setEmail("reserva." + UUID.randomUUID() + "@teste.com");
         cliente.setSenha("senha123");
@@ -91,7 +91,7 @@ class AluguelReservaIntegrationTest {
     @Test
     void shouldApplyProgressiveDiscountForMultipleGames() {
         Cliente cliente = new Cliente();
-        cliente.setCpf("444555666" + String.format("%02d", Math.abs(UUID.randomUUID().hashCode()) % 90 + 10));
+        cliente.setCpf(cpfUnico());
         cliente.setNome("Cliente Desconto");
         cliente.setEmail("desconto." + UUID.randomUUID() + "@teste.com");
         cliente.setSenha("senha123");
@@ -123,7 +123,7 @@ class AluguelReservaIntegrationTest {
     @Test
     void shouldRejectReservationWhenGameLimitExceeded() {
         Cliente cliente = new Cliente();
-        cliente.setCpf("666777888" + String.format("%02d", Math.abs(UUID.randomUUID().hashCode()) % 90 + 10));
+        cliente.setCpf(cpfUnico());
         cliente.setNome("Cliente Limite");
         cliente.setEmail("limite." + UUID.randomUUID() + "@teste.com");
         cliente.setSenha("senha123");
@@ -156,7 +156,7 @@ class AluguelReservaIntegrationTest {
     @Test
     void shouldExpireUnclaimedReservationAndRestoreGameStock() {
         Cliente cliente = new Cliente();
-        cliente.setCpf("777888999" + String.format("%02d", Math.abs(UUID.randomUUID().hashCode()) % 90 + 10));
+        cliente.setCpf(cpfUnico());
         cliente.setNome("Cliente Expiração");
         cliente.setEmail("expiracao." + UUID.randomUUID() + "@teste.com");
         cliente.setSenha("senha123");
@@ -185,7 +185,7 @@ class AluguelReservaIntegrationTest {
     @Test
     void shouldCancelReservationAndRestoreGameStock() {
         Cliente cliente = new Cliente();
-        cliente.setCpf("888999000" + String.format("%02d", Math.abs(UUID.randomUUID().hashCode()) % 90 + 10));
+        cliente.setCpf(cpfUnico());
         cliente.setNome("Cliente Cancelamento");
         cliente.setEmail("cancelamento." + UUID.randomUUID() + "@teste.com");
         cliente.setSenha("senha123");
@@ -207,14 +207,14 @@ class AluguelReservaIntegrationTest {
         assertThat(aluguelReservaRepository.findById(reserva.getIdAluguel()).orElseThrow().getStatus())
                 .isEqualTo(projeto.bdd2.dgmaster.entity.StatusAluguel.CANCELADO);
         assertThatThrownBy(() -> aluguelService.cancelarReserva(reserva.getIdAluguel(), cliente.getCpf()))
-            .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(IllegalStateException.class);
         assertThat(jogoRepository.findById(jogo.getCodigoJogo()).orElseThrow().getQuantidadeEstoque()).isEqualTo(1);
     }
 
     @Test
     void shouldMarkReservationAsPickedUpWithoutChangingStock() {
         Cliente cliente = new Cliente();
-        cliente.setCpf("999000111" + String.format("%02d", Math.abs(UUID.randomUUID().hashCode()) % 90 + 10));
+        cliente.setCpf(cpfUnico());
         cliente.setNome("Cliente Retirada");
         cliente.setEmail("retirada." + UUID.randomUUID() + "@teste.com");
         cliente.setSenha("senha123");
@@ -240,8 +240,8 @@ class AluguelReservaIntegrationTest {
                 .isInstanceOf(IllegalStateException.class);
     }
 
-        @Test
-        void shouldSetSevenDayRentalPeriodAndAllowOnlyOneRenewal() {
+    @Test
+    void shouldSetSevenDayRentalPeriodAndAllowOnlyOneRenewal() {
         Cliente cliente = criarCliente("prazo");
         Jogo jogo = criarJogo("Prazo", new BigDecimal("30.00"), new BigDecimal("100.00"), 1);
         var reserva = aluguelService.reservar(cliente.getCpf(), List.of(jogo.getCodigoJogo()));
@@ -257,22 +257,22 @@ class AluguelReservaIntegrationTest {
         assertThat(aluguelRenovado.getDataLimiteDevolucao()).isEqualTo(retirada.plusDays(14));
         assertThat(aluguelRenovado.getQuantidadeRenovacoes()).isEqualTo(1);
         assertThatThrownBy(() -> aluguelService.renovarAluguel(reserva.getIdAluguel(), cliente.getCpf(), retirada.plusDays(3)))
-            .isInstanceOf(IllegalStateException.class);
-        }
+                .isInstanceOf(IllegalStateException.class);
+    }
 
-        @Test
-        void shouldCapLateFeePerGameAndReactivateOnlyAfterSuspensionAndPayment() {
+    @Test
+    void shouldCapLateFeePerGameAndReactivateOnlyAfterSuspensionAndPayment() {
         Cliente cliente = criarCliente("multa");
         Jogo jogoAbaixoDoTeto = criarJogo("Teto baixo", new BigDecimal("30.00"), new BigDecimal("8.00"), 1);
         Jogo jogoAcimaDoTeto = criarJogo("Teto alto", new BigDecimal("30.00"), new BigDecimal("100.00"), 1);
         var reserva = aluguelService.reservar(cliente.getCpf(),
-            List.of(jogoAbaixoDoTeto.getCodigoJogo(), jogoAcimaDoTeto.getCodigoJogo()));
+                List.of(jogoAbaixoDoTeto.getCodigoJogo(), jogoAcimaDoTeto.getCodigoJogo()));
         LocalDateTime retirada = LocalDateTime.now().withNano(0).plusSeconds(1);
         aluguelService.retirarReserva(reserva.getIdAluguel(), cliente.getCpf(), retirada);
         LocalDateTime prazoDevolucao = retirada.plusDays(7);
         aluguelService.verificarAtrasos(prazoDevolucao.plusHours(1));
         assertThat(aluguelReservaRepository.findById(reserva.getIdAluguel()).orElseThrow().getStatus())
-            .isEqualTo(projeto.bdd2.dgmaster.entity.StatusAluguel.ATRASADO);
+                .isEqualTo(projeto.bdd2.dgmaster.entity.StatusAluguel.ATRASADO);
         LocalDateTime devolucaoAtrasada = prazoDevolucao.plusDays(2);
 
         var devolvido = aluguelService.devolver(reserva.getIdAluguel(), devolucaoAtrasada);
@@ -290,10 +290,10 @@ class AluguelReservaIntegrationTest {
 
         penalidadeService.reativarContasElegiveis(devolucaoAtrasada.plusDays(4));
         assertThat(clienteRepository.findById(cliente.getCpf()).orElseThrow().isStatusConta()).isTrue();
-        }
+    }
 
-        @Test
-        void shouldConvertExpiredReservationToWalletCreditAndUseItOnNextRental() {
+    @Test
+    void shouldConvertExpiredReservationToWalletCreditAndUseItOnNextRental() {
         Cliente cliente = criarCliente("carteira");
         Jogo jogo = criarJogo("Carteira", new BigDecimal("30.00"), new BigDecimal("100.00"), 1);
         var primeiraReserva = aluguelService.reservar(cliente.getCpf(), List.of(jogo.getCodigoJogo()));
@@ -301,17 +301,17 @@ class AluguelReservaIntegrationTest {
         aluguelService.expirarReservasVencidas(primeiraReserva.getDataLimiteRetirada().plusSeconds(1));
 
         assertThat(clienteRepository.findById(cliente.getCpf()).orElseThrow().getCreditoCarteira())
-            .isEqualByComparingTo("30.00");
+                .isEqualByComparingTo("30.00");
 
         var segundaReserva = aluguelService.reservar(cliente.getCpf(), List.of(jogo.getCodigoJogo()));
 
         assertThat(segundaReserva.getValorTotal()).isEqualTo(0.0);
         assertThat(clienteRepository.findById(cliente.getCpf()).orElseThrow().getCreditoCarteira())
-            .isEqualByComparingTo("0.00");
-        }
+                .isEqualByComparingTo("0.00");
+    }
 
-        @Test
-        void shouldCreateDependentReservationImmediatelyUnderTitular() {
+    @Test
+    void shouldCreateDependentReservationImmediatelyUnderTitular() {
         Cliente cliente = criarCliente("dependente");
         Dependente dependente = new Dependente();
         dependente.setNome("Dependente Teste");
@@ -321,23 +321,23 @@ class AluguelReservaIntegrationTest {
         Jogo jogo = criarJogo("Aprovação", new BigDecimal("30.00"), new BigDecimal("100.00"), 1);
 
         var solicitacao = aluguelService.solicitarReserva(cliente.getCpf(), dependente.getIdDependente(),
-            List.of(jogo.getCodigoJogo()));
+                List.of(jogo.getCodigoJogo()));
 
         assertThat(solicitacao.getStatus())
-            .isEqualTo(projeto.bdd2.dgmaster.entity.StatusAluguel.RESERVADO);
+                .isEqualTo(projeto.bdd2.dgmaster.entity.StatusAluguel.RESERVADO);
         assertThat(solicitacao.getDependente().getIdDependente()).isEqualTo(dependente.getIdDependente());
         assertThat(solicitacao.getDataLimiteRetirada()).isNotNull();
         assertThat(jogoRepository.findById(jogo.getCodigoJogo()).orElseThrow().getQuantidadeEstoque()).isZero();
         assertThatThrownBy(() -> aluguelService.retirarReserva(solicitacao.getIdAluguel(), "00000000000"))
-            .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(IllegalArgumentException.class);
 
         var retirada = aluguelService.retirarReserva(solicitacao.getIdAluguel(), cliente.getCpf());
         assertThat(retirada.getStatus()).isEqualTo(projeto.bdd2.dgmaster.entity.StatusAluguel.RETIRADO);
-        }
+    }
 
-        @Test
-        @Transactional
-        void shouldSnapshotDiscountedUnitPricesAtReservationTime() {
+    @Test
+    @Transactional
+    void shouldSnapshotDiscountedUnitPricesAtReservationTime() {
         Cliente cliente = criarCliente("snapshot");
         Jogo jogoA = criarJogo("Snapshot A", new BigDecimal("10.01"), new BigDecimal("100.00"), 1);
         Jogo jogoB = criarJogo("Snapshot B", new BigDecimal("20.02"), new BigDecimal("100.00"), 1);
@@ -349,50 +349,50 @@ class AluguelReservaIntegrationTest {
         var persistida = aluguelReservaRepository.findById(reserva.getIdAluguel()).orElseThrow();
 
         assertThat(persistida.getItensAluguel())
-            .extracting(item -> item.getValorUnitarioCobrado())
-            .containsExactly(new BigDecimal("9.01"), new BigDecimal("18.02"));
+                .extracting(item -> item.getValorUnitarioCobrado())
+                .containsExactly(new BigDecimal("9.01"), new BigDecimal("18.02"));
         assertThat(persistida.getItensAluguel())
-            .extracting(item -> item.getJogo().getPrecoLocacao())
-            .containsExactly(new BigDecimal("99.00"), new BigDecimal("20.02"));
-        }
+                .extracting(item -> item.getJogo().getPrecoLocacao())
+                .containsExactly(new BigDecimal("99.00"), new BigDecimal("20.02"));
+    }
 
-        @Test
-        void shouldCountExistingRentalsTowardTheFourGameLimit() {
+    @Test
+    void shouldCountExistingRentalsTowardTheFourGameLimit() {
         Cliente cliente = criarCliente("limite-acumulado");
         List<Jogo> jogos = List.of(
-            criarJogo("Limite 1", new BigDecimal("30.00"), new BigDecimal("100.00"), 1),
-            criarJogo("Limite 2", new BigDecimal("30.00"), new BigDecimal("100.00"), 1),
-            criarJogo("Limite 3", new BigDecimal("30.00"), new BigDecimal("100.00"), 1),
-            criarJogo("Limite 4", new BigDecimal("30.00"), new BigDecimal("100.00"), 1),
-            criarJogo("Limite 5", new BigDecimal("30.00"), new BigDecimal("100.00"), 1));
+                criarJogo("Limite 1", new BigDecimal("30.00"), new BigDecimal("100.00"), 1),
+                criarJogo("Limite 2", new BigDecimal("30.00"), new BigDecimal("100.00"), 1),
+                criarJogo("Limite 3", new BigDecimal("30.00"), new BigDecimal("100.00"), 1),
+                criarJogo("Limite 4", new BigDecimal("30.00"), new BigDecimal("100.00"), 1),
+                criarJogo("Limite 5", new BigDecimal("30.00"), new BigDecimal("100.00"), 1));
 
         aluguelService.reservar(cliente.getCpf(), idsDosJogos(jogos.subList(0, 3)));
 
         assertThatThrownBy(() -> aluguelService.reservar(cliente.getCpf(),
-            idsDosJogos(jogos.subList(3, 5))))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Limite máximo");
-        }
+                idsDosJogos(jogos.subList(3, 5))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Limite máximo");
+    }
 
-        private Cliente criarCliente(String prefixo) {
+    private Cliente criarCliente(String prefixo) {
         Cliente cliente = new Cliente();
-        cliente.setCpf("123456789" + String.format("%02d", Math.abs(UUID.randomUUID().hashCode()) % 90 + 10));
+        cliente.setCpf(cpfUnico());
         cliente.setNome("Cliente " + prefixo);
         cliente.setEmail(prefixo + "." + UUID.randomUUID() + "@teste.com");
         cliente.setSenha("senha123");
         cliente.setDataNascimento(LocalDate.of(1990, 1, 1));
         cliente.setStatusConta(true);
         return clienteRepository.save(cliente);
-        }
+    }
 
-        private Jogo criarJogo(String nome, BigDecimal preco, BigDecimal reposicao, int estoque) {
+    private Jogo criarJogo(String nome, BigDecimal preco, BigDecimal reposicao, int estoque) {
         Jogo jogo = new Jogo();
         jogo.setNome(nome + " " + UUID.randomUUID());
         jogo.setPrecoLocacao(preco);
         jogo.setValorReposicao(reposicao);
         jogo.setQuantidadeEstoque(estoque);
         return jogoRepository.save(jogo);
-        }
+    }
 
     private List<Integer> idsDosJogos(List<Jogo> jogos) {
         List<Integer> ids = new java.util.ArrayList<>();
@@ -400,5 +400,15 @@ class AluguelReservaIntegrationTest {
             ids.add(jogo.getCodigoJogo());
         }
         return ids;
+    }
+
+    /**
+     * Gera um CPF de 11 dígitos com alta entropia. A base de teste é persistente
+     * (MySQL compartilhado entre execuções), então CPFs fixos causavam colisões
+     * de chave primária ao rodar a suíte mais de uma vez.
+     */
+    private static String cpfUnico() {
+        long numero = Math.floorMod(java.util.concurrent.ThreadLocalRandom.current().nextLong(), 100_000_000_000L);
+        return String.format("%011d", numero);
     }
 }

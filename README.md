@@ -35,7 +35,12 @@ Edite o arquivo `.env` com suas credenciais:
 DB_URL=jdbc:mysql://localhost:3306/db_master?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
 DB_USERNAME=root
 DB_PASSWORD=sua_senha_aqui
+DGMASTER_ADMIN_KEY=uma_chave_secreta
 ```
+
+> `DB_PASSWORD` é obrigatório (não há valor padrão no repositório). A variável
+> `DGMASTER_ADMIN_KEY` é a chave exigida para criar contas de Gerente: sem ela, o
+> cadastro de gerentes fica desabilitado.
 
 ## 🐳 Docker (Recomendado)
 
@@ -181,10 +186,12 @@ A documentação interativa da API está disponível através do Swagger UI:
 ## 🔒 Segurança
 
 - Senhas criptografadas com BCrypt
+- Política de senha forte no cadastro (≥8 caracteres, letras, números e 1 caractere especial)
 - Proteção CSRF em operações de escrita
 - Rotação de ID de sessão no login
 - Autorização por perfil (CLIENTE/GERENTE)
-- Variáveis de ambiente para credenciais
+- Criação de contas de Gerente protegida por chave de administrador (`DGMASTER_ADMIN_KEY`)
+- Variáveis de ambiente para credenciais (sem valores sensíveis no repositório)
 
 ## 📝 Regras de Negócio
 
