@@ -64,10 +64,7 @@ public class WebMvpController {
 
     @GetMapping("/")
     public String inicio(@AuthenticationPrincipal UserPrincipal principal) {
-        if (principal == null) {
-            return "redirect:/catalogo";
-        }
-        return "redirect:" + ("GERENTE".equals(principal.getTipo()) ? "/gerente" : "/cliente");
+        return "index";
     }
 
     @GetMapping("/login")

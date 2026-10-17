@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>DG Master — Clube de Jogos de Tabuleiro</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<header class="topbar">
+    <a class="brand" th:href="@{/}"><span class="brand-mark"><img src="/img/logo_dgMaster.png" alt="DG Master"></span><span>DG MASTER</span></a>
+    <nav class="nav-actions">
+        <a class="nav-link" th:href="@{/catalogo}">Catálogo</a>
+        <a class="nav-link" th:href="@{/login}">Entrar</a>
+        <a class="button button-gold button-small" th:href="@{/cadastro}">Criar conta</a>
+    </nav>
+</header>
+
+<main class="page-shell">
+    <!-- Hero -->
+    <section class="catalog-intro" style="padding-top: 100px; padding-bottom: 70px; border-bottom: none;">
+        <div>
+            <p class="eyebrow">CLUBE DE JOGOS DE TABULEIRO <span class="eyebrow-dot"></span> APRESENTAÇÃO</p>
+            <h1>A próxima noite de jogo começa <em>aqui</em>.</h1>
+            <p class="intro-copy">Explore nosso acervo físico, reserve para a família, retire na loja e devolva no prazo — tudo em um só lugar, feito para ser acolhedor.</p>
+            <div style="margin-top: 28px; display: flex; gap: 14px; flex-wrap: wrap;">
+                <a class="button button-primary" th:href="@{/catalogo}" style="font-size: 15px; min-height: 52px; padding: 0 28px; border-radius: 16px;">Ver Catálogo de Jogos</a>
+                <a class="button button-outline" th:href="@{/login}" style="font-size: 15px; min-height: 52px; padding: 0 28px; border-radius: 16px;">Entrar / Cadastrar</a>
+            </div>
+        </div>
+        <div class="intro-index" style="min-width: 220px; padding: 28px; border-left-color: var(--gold); background: var(--surface); border-radius: var(--radius-xl); box-shadow: var(--shadow-card);">
+            <span>01 — 04</span>
+            <strong>Até 4 jogos<br>por titular</strong>
+            <span style="margin-top: 10px;">Retire, jogue, devolva.</span>
+        </div>
+    </section>
+
+    <!-- Hero Placeholder Banner -->
+    <section class="section-block" style="padding: 0; border: none; background: transparent; box-shadow: none; margin-bottom: 32px;">
+        <img src="/img/principal.webp" alt="Mesa de jogos DG Master" style="width: 100%; max-height: 480px; object-fit: contain; display: block; border-radius: var(--radius-xl);">
+    </section>
+
+    <!-- Sobre -->
+    <section class="section-block">
+        <div class="section-title" style="align-items: flex-start; flex-direction: column; gap: 8px;">
+            <div>
+                <p class="eyebrow">SOBRE A DG MASTER</p>
+                <h2>Um lugar feito para reunir mesas e histórias.</h2>
+            </div>
+        </div>
+        <p class="intro-copy" style="max-width: 720px; font-size: 16px;">A DG Master é uma loja física dedicada ao aluguel de jogos de tabuleiro. Nosso propósito é simples: criar oportunidades de encontro, riso e estratégia. Cada jogo é escolhido para ser descoberto junto — seja em uma partida rápida ou numa noite longa de replay.</p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 22px; margin-top: 28px;">
+            <img src="/img/img1.jpeg" alt="Ambiente DG Master" style="width:100%;height:220px;object-fit:cover;border-radius:var(--radius-lg);display:block;">
+            <img src="/img/img2.jpeg" alt="Mesa DG Master" style="width:100%;height:220px;object-fit:cover;border-radius:var(--radius-lg);display:block;">
+            <img src="/img/img3.jpeg" alt="Detalhe DG Master" style="width:100%;height:220px;object-fit:cover;border-radius:var(--radius-lg);display:block;">
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="section-block" style="background: linear-gradient(135deg, #0a3d62 0%, #0A84FF 100%); color: #fff;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 28px; flex-wrap: wrap;">
+            <div>
+                <h2 style="color: #fff; font-size: clamp(28px, 3.5vw, 42px);">Pronto para sua próxima mesa?</h2>
+                <p style="color: rgba(255,255,255,0.85); margin: 8px 0 0; font-size: 15px;">Escolha jogos, reserve para a família e aproveite o acervo.</p>
+            </div>
+            <a class="button button-gold" th:href="@{/catalogo}" style="font-size: 15px; min-height: 52px; padding: 0 28px; border-radius: 16px;">Ver Catálogo</a>
+        </div>
+    </section>
+</main>
+
+<footer class="site-footer"><span>DG MASTER</span><span>Clube de jogos de tabuleiro.</span></footer>
+</body>
+</html>

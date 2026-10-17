@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Entrar | DG Master</title>
-    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body class="auth-page">
 <header class="topbar topbar-light">
-    <a class="brand" th:href="@{/catalogo}"><span class="brand-mark">DG</span><span>MASTER</span></a>
+    <a class="brand" th:href="@{/}"><span class="brand-mark"><img src="/img/logo_dgMaster.png" alt="DG Master"></span><span>DG MASTER</span></a>
     <a class="nav-link" th:href="@{/catalogo}">Explorar catálogo</a>
 </header>
 <main class="auth-layout">
@@ -31,7 +31,7 @@
             <input id="username" name="username" type="email" autocomplete="username" required>
             <label for="password">Senha</label>
             <input id="password" name="password" type="password" autocomplete="current-password" required>
-            <button class="button button-primary button-wide" type="submit">Entrar</button>
+            <button class="button button-gold button-wide" type="submit">Entrar</button>
         </form>
         <p class="form-foot">Ainda não tem cadastro? <a th:href="@{/cadastro}">Criar conta de cliente</a></p>
         <p class="form-foot"><a th:href="@{/admin}">Criar conta de gerente (admin)</a></p>

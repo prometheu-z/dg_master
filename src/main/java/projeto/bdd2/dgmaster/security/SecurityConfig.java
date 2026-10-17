@@ -64,7 +64,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/login", "/cadastro", "/admin", "/catalogo", "/catalogo/**", "/catalogo/*",
-                            "/css/**", "/js/**", "/webjars/**", "/api/auth/**", "/api/auth/cadastro", "/api/auth/cadastro-gerente").permitAll()
+                            "/css/**", "/js/**", "/webjars/**", "/img/**", "/api/auth/**", "/api/auth/cadastro", "/api/auth/cadastro-gerente").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/jogos/**").permitAll()
                         .requestMatchers("/api/gerente/**", "/api/estatisticas/**").hasRole("GERENTE")

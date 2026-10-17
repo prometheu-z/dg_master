@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <span th:text="${jogo.nome} + ' | DG Master'"></span>
-    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <title th:text="${jogo.nome} + ' | DG Master'"></title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
 <header class="topbar">
-    <a class="brand" th:href="@{/catalogo}"><span class="brand-mark">DG</span><span>MASTER</span></a>
+    <a class="brand" th:href="@{/}"><span class="brand-mark"><img src="/img/logo_dgMaster.png" alt="DG Master"></span><span>DG MASTER</span></a>
     <nav class="nav-actions">
         <a class="nav-link" th:href="@{/catalogo}">Voltar ao catálogo</a>
         <a class="nav-link" th:if="${principal == null}" th:href="@{/login}">Entrar</a>
@@ -40,6 +40,10 @@
             <span>ESTOQUE</span>
             <strong th:text="${jogo.quantidadeEstoque}"></strong>
         </div>
+    </section>
+
+    <section class="section-block">
+        <div class="game-cover-placeholder" aria-label="Capa do jogo" style="height: 320px; border-radius: var(--radius-xl);"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3" ry="3"/><path d="M3 9h18"/><circle cx="12" cy="13" r="2"/></svg></div>
     </section>
 
     <section class="section-block">

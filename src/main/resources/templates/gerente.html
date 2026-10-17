@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Gestao | DG Master</title>
-    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
 <header class="topbar">
-    <a class="brand" th:href="@{/gerente}"><span class="brand-mark">DG</span><span>MASTER</span></a>
+    <a class="brand" th:href="@{/gerente}"><span class="brand-mark"><img src="/img/logo_dgMaster.png" alt="DG Master"></span><span>DG MASTER</span></a>
     <nav class="nav-actions"><a class="nav-link" th:href="@{/catalogo}">Ver catalogo</a><a class="nav-link is-current" th:href="@{/gerente}">Gestao</a><a class="nav-link" th:href="@{/gerente/estatisticas}">Estatísticas</a>
         <form th:action="@{/logout}" method="post" class="inline-form"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button class="button button-outline button-small" type="submit">Sair</button></form>
     </nav>
