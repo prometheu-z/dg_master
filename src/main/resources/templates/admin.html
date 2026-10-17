@@ -37,8 +37,14 @@
                 <div class="form-group">
                     <label for="senha">Senha:</label>
                     <input type="password" id="senha" name="senha" required
-                           minlength="6"
-                           placeholder="Mínimo 6 caracteres">
+                           minlength="8"
+                           placeholder="Mínimo 8 caracteres, com letras, números e 1 especial">
+                </div>
+
+                <div class="form-group">
+                    <label for="chaveAdmin">Chave de administrador:</label>
+                    <input type="password" id="chaveAdmin" name="chaveAdmin" required
+                           placeholder="Valor de DGMASTER_ADMIN_KEY">
                 </div>
 
                 <div class="form-actions">
@@ -48,8 +54,9 @@
             </form>
 
             <div class="info-box">
-                <p><strong>Nota:</strong> Esta página é apenas para criação inicial de gerentes. 
-                Apenas gerentes podem acessar o painel administrativo.</p>
+                <p><strong>Nota:</strong> a criação de gerentes exige a chave de administrador
+                configurada no servidor (variável de ambiente <code>DGMASTER_ADMIN_KEY</code>).
+                Sem essa chave, o cadastro de gerentes fica desabilitado.</p>
             </div>
         </div>
     </div>

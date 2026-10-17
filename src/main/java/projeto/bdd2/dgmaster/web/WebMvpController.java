@@ -82,13 +82,17 @@ public class WebMvpController {
 
     @PostMapping("/cadastro")
     public String cadastrar(@ModelAttribute CadastroForm form, RedirectAttributes redirectAttributes) {
-        var resultado = authController.cadastrarCliente(new CadastroRequest(
-                form.cpf(), form.nome(), form.email(), form.senha(), form.dataNascimento()));
-        if (resultado.getStatusCode().is2xxSuccessful()) {
-            redirectAttributes.addFlashAttribute("sucesso", "Conta criada. Entre para continuar.");
-            return "redirect:/login";
+        try {
+            var resultado = authController.cadastrarCliente(new CadastroRequest(
+                    form.cpf(), form.nome(), form.email(), form.senha(), form.dataNascimento()));
+            if (resultado.getStatusCode().is2xxSuccessful()) {
+                redirectAttributes.addFlashAttribute("sucesso", "Conta criada. Entre para continuar.");
+                return "redirect:/login";
+            }
+            redirectAttributes.addFlashAttribute("erro", "Não foi possível criar a conta. Verifique os dados ou use outro e-mail.");
+        } catch (RuntimeException exception) {
+            redirectAttributes.addFlashAttribute("erro", exception.getMessage());
         }
-        redirectAttributes.addFlashAttribute("erro", "Não foi possível criar a conta. Verifique os dados ou use outro e-mail.");
         return "redirect:/cadastro";
     }
     @GetMapping("/admin")
@@ -101,10 +105,11 @@ public class WebMvpController {
             @RequestParam String nome,
             @RequestParam String email,
             @RequestParam String senha,
+            @RequestParam(required = false) String chaveAdmin,
             RedirectAttributes redirectAttributes) {
         try {
             var resultado = authController.cadastrarGerente(
-                    new GerenteRequest(nome, email, senha)
+                    new GerenteRequest(nome, email, senha, chaveAdmin)
             );
 
             if (resultado.getStatusCode().is2xxSuccessful()) {

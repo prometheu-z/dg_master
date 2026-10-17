@@ -5,10 +5,10 @@ services:
     image: mysql:8.0
     container_name: dgmaster-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-G0rg0nz0l@}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:?Defina DB_PASSWORD no .env (veja .env.example)}
       MYSQL_DATABASE: db_master
       MYSQL_USER: ${DB_USERNAME:-root}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-G0rg0nz0l@}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Defina DB_PASSWORD no .env (veja .env.example)}
     ports:
       - "3306:3306"
     volumes:
@@ -27,8 +27,9 @@ services:
     container_name: dgmaster-app
     environment:
       DB_URL: jdbc:mysql://mysql:3306/db_master?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      DGMASTER_ADMIN_KEY: ${DGMASTER_ADMIN_KEY:-}
       DB_USERNAME: ${DB_USERNAME:-root}
-      DB_PASSWORD: ${DB_PASSWORD:-G0rg0nz0l@}
+      DB_PASSWORD: ${DB_PASSWORD:?Defina DB_PASSWORD no .env (veja .env.example)}
     ports:
       - "8080:8080"
     depends_on:

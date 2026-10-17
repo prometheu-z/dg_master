@@ -5,8 +5,15 @@ spring:
   datasource:
     url: ${DB_URL:jdbc:mysql://localhost:3306/db_master?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
     username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:G0rg0nz0l@}
+    password: ${DB_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # schema.sql é o DDL de referência (HU10); em desenvolvimento o schema é
+  # gerenciado pelo Hibernate (ddl-auto). Migrações versionadas (Flyway/Liquibase)
+  # permanecem como evolução pendente.
+  sql:
+    init:
+      mode: never
 
   jpa:
     hibernate:
@@ -16,3 +23,9 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
+
+dgmaster:
+  admin:
+    # Chave exigida para criar contas de Gerente (/admin e /api/auth/cadastro-gerente).
+    # Sem valor definido, o cadastro de gerentes fica desabilitado.
+    chave-cadastro-gerente: ${DGMASTER_ADMIN_KEY:}

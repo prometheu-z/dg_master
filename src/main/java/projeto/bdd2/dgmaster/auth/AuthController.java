@@ -1,8 +1,10 @@
 package projeto.bdd2.dgmaster.auth;
 
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -19,6 +21,7 @@ import projeto.bdd2.dgmaster.entity.Gerente;
 import projeto.bdd2.dgmaster.repository.ClienteRepository;
 import projeto.bdd2.dgmaster.repository.GerenteRepository;
 import projeto.bdd2.dgmaster.security.UserPrincipal;
+import projeto.bdd2.dgmaster.service.ClienteService;
 
 import java.time.LocalDate;
 import java.util.Map;
@@ -27,26 +30,32 @@ import java.util.Map;
 @RequestMapping("/api/auth")
 public class AuthController {
 
+    private final ClienteService clienteService;
     private final ClienteRepository clienteRepository;
     private final GerenteRepository gerenteRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final SecurityContextRepository securityContextRepository;
     private final SessionAuthenticationStrategy sessionAuthenticationStrategy;
+    private final String chaveCadastroGerente;
 
     public AuthController(
+            ClienteService clienteService,
             ClienteRepository clienteRepository,
             GerenteRepository gerenteRepository,
             PasswordEncoder passwordEncoder,
             AuthenticationManager authenticationManager,
             SecurityContextRepository securityContextRepository,
-            SessionAuthenticationStrategy sessionAuthenticationStrategy) {
+            SessionAuthenticationStrategy sessionAuthenticationStrategy,
+            @Value("${dgmaster.admin.chave-cadastro-gerente:}") String chaveCadastroGerente) {
+        this.clienteService = clienteService;
         this.clienteRepository = clienteRepository;
         this.gerenteRepository = gerenteRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.securityContextRepository = securityContextRepository;
         this.sessionAuthenticationStrategy = sessionAuthenticationStrategy;
+        this.chaveCadastroGerente = chaveCadastroGerente;
     }
 
     @PostMapping("/cadastro")
@@ -54,25 +63,31 @@ public class AuthController {
         if (clienteRepository.existsByEmail(request.email())) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
+        ValidacaoSenha.validar(request.senha());
 
         Cliente cliente = new Cliente();
         cliente.setCpf(request.cpf());
         cliente.setNome(request.nome());
         cliente.setEmail(request.email());
-        cliente.setSenha(passwordEncoder.encode(request.senha()));
+        cliente.setSenha(request.senha());
         cliente.setDataNascimento(LocalDate.parse(request.dataNascimento()));
-        cliente.setStatusConta(true);
-        clienteRepository.save(cliente);
+
+        // Delega ao serviço para aplicar RN7 (idade mínima), unicidade de CPF/e-mail
+        // e o hash BCrypt da senha em um único ponto.
+        Cliente salvo = clienteService.cadastrar(cliente);
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new AuthResponse("CLIENTE", cliente.getCpf(), cliente.getNome(), cliente.getEmail(), true));
+                .body(new AuthResponse("CLIENTE", salvo.getCpf(), salvo.getNome(), salvo.getEmail(), true));
     }
 
     @PostMapping("/cadastro-gerente")
     public ResponseEntity<AuthResponse> cadastrarGerente(@Valid @RequestBody GerenteRequest request) {
+        validarChaveAdministrador(request.chaveAdmin());
+
         if (gerenteRepository.existsByEmail(request.email())) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
+        ValidacaoSenha.validar(request.senha());
 
         Gerente gerente = new Gerente();
         gerente.setNome(request.nome());
@@ -116,5 +131,20 @@ public class AuthController {
         }
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED)
             .body(Map.of("mensagem", "A validação 2FA ainda não está configurada."));
+    }
+
+    /**
+     * O cadastro de gerentes é uma operação administrativa: só é aceito quando
+     * uma chave de administrador está configurada (DGMASTER_ADMIN_KEY) e o valor
+     * informado confere. Sem chave configurada, a operação fica desabilitada.
+     */
+    private void validarChaveAdministrador(String chaveInformada) {
+        if (chaveCadastroGerente == null || chaveCadastroGerente.isBlank()) {
+            throw new AccessDeniedException(
+                    "O cadastro de gerentes está desabilitado. Defina a variável de ambiente DGMASTER_ADMIN_KEY.");
+        }
+        if (!chaveCadastroGerente.equals(chaveInformada)) {
+            throw new AccessDeniedException("Chave de administrador inválida.");
+        }
     }
 }

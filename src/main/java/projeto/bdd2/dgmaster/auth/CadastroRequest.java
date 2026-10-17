@@ -14,6 +14,7 @@ public record CadastroRequest(
         @Email(message = "Email inválido")
         String email,
         @NotBlank(message = "Senha obrigatória")
+        @Pattern(regexp = ValidacaoSenha.REGEX, message = ValidacaoSenha.MENSAGEM)
         String senha,
         @NotBlank(message = "Data de nascimento obrigatória")
         String dataNascimento
