@@ -92,7 +92,27 @@
         <div class="visitor-cta"><span>Pronto para reservar?</span><a th:href="@{/login}">Entre na sua conta <span aria-hidden="true">→</span></a></div>
     </div>
     <div class="empty-state" th:if="${!cliente and #lists.isEmpty(jogos)}"><span class="empty-mark">—</span><h2>Nenhum jogo encontrado</h2><p>Tente remover um filtro ou buscar por outro genero.</p></div>
+    <section class="how-it-works" style="margin-top:60px; padding-top:40px; border-top:2px solid var(--line);">
+        <h2 style="font-family:Georgia, serif; font-size:28px; margin-bottom:28px;">Como funciona</h2>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:28px;">
+            <article>
+                <span style="font:28px Georgia, serif; color:var(--coral); display:block; margin-bottom:8px;">01</span>
+                <h3 style="margin:0 0 6px; font-size:16px;">Escolha seus jogos</h3>
+                <p style="margin:0; color:var(--muted); font-size:13px;">Navegue pelo catálogo, filtre por categoria e reserve até 4 jogos por titular.</p>
+            </article>
+            <article>
+                <span style="font:28px Georgia, serif; color:var(--coral); display:block; margin-bottom:8px;">02</span>
+                <h3 style="margin:0 0 6px; font-size:16px;">Retire na loja</h3>
+                <p style="margin:0; color:var(--muted); font-size:13px;">Retire no prazo informado. Cada jogo tem prazo de devolução definido na reserva.</p>
+            </article>
+            <article>
+                <span style="font:28px Georgia, serif; color:var(--coral); display:block; margin-bottom:8px;">03</span>
+                <h3 style="margin:0 0 6px; font-size:16px;">Devolva e renove</h3>
+                <p style="margin:0; color:var(--muted); font-size:13px;">Devolva no prazo para evitar multas. Se quiser renovar, entre em contato com o gerente.</p>
+            </article>
+        </div>
+    </section>
 </main>
-<footer class="site-footer"><span>DG MASTER</span><span>Jogos de tabuleiro para a sua proxima reuniao.</span></footer>
+<footer class="site-footer"><span>DG MASTER</span><span>Jogos de tabuleiro para a sua próxima reunião.</span></footer>
 </body>
 </html>

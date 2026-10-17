@@ -11,8 +11,34 @@
     --line: #d8e2dc;
     --soft-green: #e7f0e9;
     --soft-coral: #f8e7e1;
-    --shadow: 0 20px 55px rgba(18, 50, 38, .08);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+    --shadow-md: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+    --shadow-lg: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+    --shadow-xl: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+    --radius-xl: 12px;
+    --transition-fast: 150ms ease;
+    --transition-medium: 250ms ease;
+    --transition-slow: 350ms ease;
+    --font-sans: "Trebuchet MS", "Segoe UI", sans-serif;
+    --font-serif: Georgia, "Times New Roman", serif;
+    --font-mono: "Courier New", Courier, monospace;
 }
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+img { max-width: 100%; height: auto; display: block; }
 
 * { box-sizing: border-box; }
 
@@ -25,9 +51,11 @@ body {
     line-height: 1.5;
 }
 
-a { color: var(--pine); text-decoration: none; }
+a { color: var(--pine); text-decoration: none; transition: color var(--transition-fast); }
 a:hover { color: var(--pine-dark); }
-button, input, select { font: inherit; }
+button, input, select, textarea { font: inherit; }
+
+::selection { background: rgba(23,100,72,0.15); color: inherit; }
 
 .topbar {
     min-height: 72px;
@@ -225,6 +253,10 @@ input:focus, select:focus { border-color: var(--pine); box-shadow: 0 0 0 3px rgb
 .status-unavailable {
     color: var(--coral);
 }
+
+.status-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; letter-spacing: .3px; }
+.status-ok { background: var(--soft-green); color: var(--pine-dark); border: 1px solid #b8d6bf; }
+.status-off { background: var(--soft-coral); color: #833c2d; border: 1px solid #dfc8bf; }
 
 .dependent-row {
     display: flex;

@@ -74,10 +74,9 @@
                 <span class="detail-label">Quantidade em estoque:</span>
                 <span class="detail-value" th:text="${jogo.quantidadeEstoque}"></span>
             </div>
-            <div class="detail-row">
+            <div class="detail-row" style="padding-top:14px; border-top:2px solid var(--line);">
                 <span class="detail-label">Disponibilidade:</span>
-                <span class="detail-value" th:class="${jogo.statusDisponibilidade ? 'status-available' : 'status-unavailable'}" 
-                      th:text="${jogo.statusDisponibilidade ? 'Disponível' : 'Indisponível'}"></span>
+                <span th:class="${jogo.statusDisponibilidade ? 'status-badge status-ok' : 'status-badge status-off'}" th:text="${jogo.statusDisponibilidade ? 'Disponível — pode ser reservado' : 'Indisponível — em manutenção'}"></span>
             </div>
         </div>
     </section>
