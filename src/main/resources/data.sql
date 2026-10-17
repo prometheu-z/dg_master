@@ -1,8 +1,9 @@
 -- Dados iniciais grandes: acervo + clientes + compras/alugueis
+-- Fix: booleanos como 1/0 para compatibilidade total com inicializador do Spring Boot
 
 -- Cliente 1
 INSERT INTO cliente (cpf, nome, email, senha, data_nascimento, status_conta, credito_carteira) VALUES
-('12345678901', 'Maria Silva', 'maria.silva@email.com', '$2a$10$hashsimulado', '1990-05-15', true, 150.00);
+('12345678901', 'Maria Silva', 'maria.silva@email.com', '$2a$10$hashsimulado', '1990-05-15', 1, 150.00);
 
 -- Dependente de Maria
 INSERT INTO dependente (nome, data_nascimento, cliente_cpf) VALUES
@@ -10,15 +11,15 @@ INSERT INTO dependente (nome, data_nascimento, cliente_cpf) VALUES
 
 -- Cliente 2
 INSERT INTO cliente (cpf, nome, email, senha, data_nascimento, status_conta, credito_carteira) VALUES
-('98765432109', 'João Santos', 'joao.santos@email.com', '$2a$10$hashsimulado', '1985-11-22', true, 50.00);
+('98765432109', 'João Santos', 'joao.santos@email.com', '$2a$10$hashsimulado', '1985-11-22', 1, 50.00);
 
 -- Cliente 3
 INSERT INTO cliente (cpf, nome, email, senha, data_nascimento, status_conta, credito_carteira) VALUES
-('45678912300', 'Ana Costa', 'ana.costa@email.com', '$2a$10$hashsimulado', '1995-08-30', true, 0.00);
+('45678912300', 'Ana Costa', 'ana.costa@email.com', '$2a$10$hashsimulado', '1995-08-30', 1, 0.00);
 
 -- Cliente 4
 INSERT INTO cliente (cpf, nome, email, senha, data_nascimento, status_conta, credito_carteira) VALUES
-('32165498700', 'Pedro Lima', 'pedro.lima@email.com', '$2a$10$hashsimulado', '1988-01-05', false, 0.00);
+('32165498700', 'Pedro Lima', 'pedro.lima@email.com', '$2a$10$hashsimulado', '1988-01-05', 0, 0.00);
 
 -- Gerente
 INSERT INTO gerente (nome, email, senha) VALUES
@@ -26,26 +27,26 @@ INSERT INTO gerente (nome, email, senha) VALUES
 
 -- ACERVO GRANDE (20 jogos)
 INSERT INTO jogo (nome, categoria, genero, faixa_etaria_recomendada, preco_locacao, valor_reposicao, quantidade_estoque, status_disponibilidade, ativo_catalogo, gerente_id) VALUES
-('Azul', 'Estratégia', 'Cartas', 8, 25.00, 120.00, 3, true, true, 1),
-('Ticket to Ride', 'Estratégia', 'Família', 8, 35.00, 150.00, 2, true, true, 1),
-('Catan', 'Estratégia', 'Negociação', 10, 40.00, 180.00, 4, true, true, 1),
-('Dixit', 'Criatividade', 'Cartas', 8, 30.00, 130.00, 1, true, true, 1),
-('Carcassonne', 'Estratégia', 'Família', 7, 28.00, 110.00, 3, true, true, 1),
-('Pandemic', 'Cooperativo', 'Estratégia', 13, 45.00, 200.00, 2, true, true, 1),
-('Codinomes', 'Criatividade', 'Cartas', 14, 32.00, 140.00, 2, true, true, 1),
-('7 Wonders', 'Estratégia', 'Cartas', 10, 38.00, 160.00, 1, false, true, 1),
-('Splendor', 'Estratégia', 'Cartas', 10, 30.00, 120.00, 3, true, true, 1),
-('King of Tokyo', 'Estratégia', 'Família', 8, 35.00, 150.00, 2, true, true, 1),
-('Love Letter', 'Estratégia', 'Cartas', 10, 22.00, 90.00, 5, true, true, 1),
-('Mysterium', 'Cooperativo', 'Criatividade', 10, 42.00, 170.00, 1, true, true, 1),
-('Dobble', 'Família', 'Cartas', 6, 20.00, 85.00, 4, true, true, 1),
-('Uno', 'Família', 'Cartas', 7, 18.00, 70.00, 6, true, true, 1),
-('Magic: The Gathering Starter', 'Estratégia', 'Cartas', 13, 50.00, 220.00, 0, false, true, 1),
-('Root', 'Estratégia', 'Família', 10, 55.00, 240.00, 2, true, true, 1),
-('Gloomhaven', 'Estratégia', 'Cooperativo', 14, 120.00, 500.00, 1, true, true, 1),
-('Terraforming Mars', 'Estratégia', 'Cartas', 12, 80.00, 350.00, 1, true, true, 1),
-('Wingspan', 'Estratégia', 'Família', 10, 48.00, 190.00, 2, true, true, 1),
-('Brass: Birmingham', 'Estratégia', 'Família', 14, 95.00, 380.00, 1, true, true, 1);
+('Azul', 'Estratégia', 'Cartas', 8, 25.00, 120.00, 3, 1, 1, 1),
+('Ticket to Ride', 'Estratégia', 'Família', 8, 35.00, 150.00, 2, 1, 1, 1),
+('Catan', 'Estratégia', 'Negociação', 10, 40.00, 180.00, 4, 1, 1, 1),
+('Dixit', 'Criatividade', 'Cartas', 8, 30.00, 130.00, 1, 1, 1, 1),
+('Carcassonne', 'Estratégia', 'Família', 7, 28.00, 110.00, 3, 1, 1, 1),
+('Pandemic', 'Cooperativo', 'Estratégia', 13, 45.00, 200.00, 2, 1, 1, 1),
+('Codinomes', 'Criatividade', 'Cartas', 14, 32.00, 140.00, 2, 1, 1, 1),
+('7 Wonders', 'Estratégia', 'Cartas', 10, 38.00, 160.00, 1, 0, 1, 1),
+('Splendor', 'Estratégia', 'Cartas', 10, 30.00, 120.00, 3, 1, 1, 1),
+('King of Tokyo', 'Estratégia', 'Família', 8, 35.00, 150.00, 2, 1, 1, 1),
+('Love Letter', 'Estratégia', 'Cartas', 10, 22.00, 90.00, 5, 1, 1, 1),
+('Mysterium', 'Cooperativo', 'Criatividade', 10, 42.00, 170.00, 1, 1, 1, 1),
+('Dobble', 'Família', 'Cartas', 6, 20.00, 85.00, 4, 1, 1, 1),
+('Uno', 'Família', 'Cartas', 7, 18.00, 70.00, 6, 1, 1, 1),
+('Magic: The Gathering Starter', 'Estratégia', 'Cartas', 13, 50.00, 220.00, 0, 0, 1, 1),
+('Root', 'Estratégia', 'Família', 10, 55.00, 240.00, 2, 1, 1, 1),
+('Gloomhaven', 'Estratégia', 'Cooperativo', 14, 120.00, 500.00, 1, 1, 1, 1),
+('Terraforming Mars', 'Estratégia', 'Cartas', 12, 80.00, 350.00, 1, 1, 1, 1),
+('Wingspan', 'Estratégia', 'Família', 10, 48.00, 190.00, 2, 1, 1, 1),
+('Brass: Birmingham', 'Estratégia', 'Família', 14, 95.00, 380.00, 1, 1, 1, 1);
 
 -- ALUGUÉIS (compras) para clientes
 INSERT INTO aluguel_reserva (data_hora_reserva, data_limite_retirada, data_limite_devolucao, data_devolucao_real, status, valor_total, credito_aplicado, quantidade_renovacoes, cliente_cpf, dependente_id, termos_danos, termos_contrato, precificacao_multa, data_assinatura) VALUES
@@ -73,5 +74,5 @@ INSERT INTO contem (jogo_codigo, aluguel_id, valor_unitario_cobrado) VALUES
 
 -- Penalidades (multas para atrasados)
 INSERT INTO penalidade (tipo_penalidade, valor_multa, multa_paga, data_fim_suspensao, aluguel_id) VALUES
-('Atraso na devolução', 15.00, false, DATE_ADD(NOW(), INTERVAL 30 DAY), 3),
-('Dano ao jogo', 30.00, false, NULL, 3);
+('Atraso na devolução', 15.00, 0, DATE_ADD(NOW(), INTERVAL 30 DAY), 3),
+('Dano ao jogo', 30.00, 0, NULL, 3);
