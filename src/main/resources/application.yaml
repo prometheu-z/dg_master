@@ -13,7 +13,7 @@ spring:
   # permanecem como evolução pendente.
   sql:
     init:
-      mode: always
+      mode: never
 
   jpa:
     hibernate:
