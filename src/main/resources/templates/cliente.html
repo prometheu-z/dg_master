@@ -47,8 +47,8 @@
                 </div>
                 <div class="rental-games"><span th:each="item : ${aluguel.itensAluguel}" class="rental-game"><span th:text="${item.jogo.nome}"></span><small th:text="${'R$ ' + #numbers.formatDecimal(item.valorUnitarioCobrado, 1, 'POINT', 2, 'COMMA')}"></small></span></div>
                 <div class="rental-meta">
-                    <span th:if="${aluguel.dataLimiteRetirada != null}">Retirar ate <strong th:text="${#dates.format(aluguel.dataLimiteRetirada, 'dd/MM/yyyy HH:mm')}"></strong></span>
-                    <span th:if="${aluguel.dataLimiteDevolucao != null}">Devolver ate <strong th:text="${#dates.format(aluguel.dataLimiteDevolucao, 'dd/MM/yyyy HH:mm')}"></strong></span>
+                    <span th:if="${aluguel.dataLimiteRetirada != null}">Retirar ate <strong th:text="${#strings.substring(aluguel.dataLimiteRetirada.toString(),0,10)} ${#strings.substring(aluguel.dataLimiteRetirada.toString(),11,16)}"></strong></span>
+                    <span th:if="${aluguel.dataLimiteDevolucao != null}">Devolver ate <strong th:text="${#strings.substring(aluguel.dataLimiteDevolucao.toString(),0,10)} ${#strings.substring(aluguel.dataLimiteDevolucao.toString(),11,16)}"></strong></span>
                     <span>Total <strong th:text="${'R$ ' + #numbers.formatDecimal(aluguel.valorTotal, 1, 'POINT', 2, 'COMMA')}"></strong></span>
                 </div>
                 <div class="rental-actions">
