@@ -31,6 +31,6 @@ public class DataSeeder implements CommandLineRunner {
         jdbc.execute("INSERT INTO jogo (nome, categoria, genero, faixa_etaria_recomendada, preco_locacao, valor_reposicao, quantidade_estoque, status_disponibilidade, ativo_catalogo, gerente_id) VALUES ('Dixit','Criatividade','Cartas',8,30.00,130.00,1,1,1,1)");
         jdbc.execute("INSERT INTO jogo (nome, categoria, genero, faixa_etaria_recomendada, preco_locacao, valor_reposicao, quantidade_estoque, status_disponibilidade, ativo_catalogo, gerente_id) VALUES ('Carcassonne','Estratégia','Família',7,28.00,110.00,3,1,1,1)");
 
-        jdbc.execute("INSERT INTO aluguel_reserva (data_hora_reserva, status, valor_total, cliente_cpf, dependente_id) VALUES (NOW(),'RESERVADO',55.00,'12345678901',1)");
+        jdbc.execute("INSERT INTO aluguel_reserva (data_hora_reserva, status, valor_total, quantidade_renovacoes, cliente_cpf, dependente_id) VALUES (NOW(),'RESERVADO',55.00,0,'12345678901',1)");
     }
 }
