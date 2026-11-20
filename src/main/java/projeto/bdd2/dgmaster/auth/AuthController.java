@@ -8,8 +8,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
@@ -22,7 +22,10 @@ import projeto.bdd2.dgmaster.repository.ClienteRepository;
 import projeto.bdd2.dgmaster.repository.GerenteRepository;
 import projeto.bdd2.dgmaster.security.UserPrincipal;
 import projeto.bdd2.dgmaster.service.ClienteService;
+import projeto.bdd2.dgmaster.util.CpfValidator;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.LocalDate;
 import java.util.Map;
 
@@ -60,20 +63,22 @@ public class AuthController {
 
     @PostMapping("/cadastro")
     public ResponseEntity<AuthResponse> cadastrarCliente(@Valid @RequestBody CadastroRequest request) {
-        if (clienteRepository.existsByEmail(request.email())) {
+        String cpf = CpfValidator.sanitizar(request.cpf());
+        CpfValidator.validar(cpf);
+
+        if (clienteRepository.existsByEmail(request.email()) || clienteRepository.existsByCpf(cpf)) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
         ValidacaoSenha.validar(request.senha());
 
         Cliente cliente = new Cliente();
-        cliente.setCpf(request.cpf());
+        cliente.setCpf(cpf);
         cliente.setNome(request.nome());
         cliente.setEmail(request.email());
         cliente.setSenha(request.senha());
         cliente.setDataNascimento(LocalDate.parse(request.dataNascimento()));
 
-        // Delega ao serviço para aplicar RN7 (idade mínima), unicidade de CPF/e-mail
-        // e o hash BCrypt da senha em um único ponto.
+        // Delega ao serviço para aplicar RN7, unicidade de CPF/e-mail e hash BCrypt.
         Cliente salvo = clienteService.cadastrar(cliente);
 
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -84,7 +89,7 @@ public class AuthController {
     public ResponseEntity<AuthResponse> cadastrarGerente(@Valid @RequestBody GerenteRequest request) {
         validarChaveAdministrador(request.chaveAdmin());
 
-        if (gerenteRepository.existsByEmail(request.email())) {
+        if (gerenteRepository.existsByEmail(request.email()) || gerenteRepository.existsByMatricula(request.matricula())) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
         ValidacaoSenha.validar(request.senha());
@@ -93,10 +98,11 @@ public class AuthController {
         gerente.setNome(request.nome());
         gerente.setEmail(request.email());
         gerente.setSenha(passwordEncoder.encode(request.senha()));
+        gerente.setMatricula(request.matricula());
         gerenteRepository.save(gerente);
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new AuthResponse("GERENTE", null, gerente.getNome(), gerente.getEmail(), true));
+                .body(new AuthResponse("GERENTE", gerente.getMatricula(), gerente.getNome(), gerente.getEmail(), true));
     }
 
     @PostMapping("/login")
@@ -130,20 +136,21 @@ public class AuthController {
             return ResponseEntity.badRequest().body(Map.of("mensagem", "Código de verificação obrigatório."));
         }
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED)
-            .body(Map.of("mensagem", "A validação 2FA ainda não está configurada."));
+                .body(Map.of("mensagem", "A validação 2FA ainda não está configurada."));
     }
 
     /**
-     * O cadastro de gerentes é uma operação administrativa: só é aceito quando
-     * uma chave de administrador está configurada (DGMASTER_ADMIN_KEY) e o valor
-     * informado confere. Sem chave configurada, a operação fica desabilitada.
+     * BUG-15: comparação em tempo constante para evitar timing attack.
+     * A chave nunca é registrada em log.
      */
     private void validarChaveAdministrador(String chaveInformada) {
         if (chaveCadastroGerente == null || chaveCadastroGerente.isBlank()) {
             throw new AccessDeniedException(
                     "O cadastro de gerentes está desabilitado. Defina a variável de ambiente DGMASTER_ADMIN_KEY.");
         }
-        if (!chaveCadastroGerente.equals(chaveInformada)) {
+        byte[] esperado = chaveCadastroGerente.getBytes(StandardCharsets.UTF_8);
+        byte[] informado = (chaveInformada == null ? "" : chaveInformada).getBytes(StandardCharsets.UTF_8);
+        if (!MessageDigest.isEqual(esperado, informado)) {
             throw new AccessDeniedException("Chave de administrador inválida.");
         }
     }

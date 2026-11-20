@@ -4,10 +4,17 @@ import projeto.bdd2.dgmaster.entity.Dependente;
 
 import java.time.LocalDate;
 
-public record DependenteResponse(Integer idDependente, String nome, LocalDate dataNascimento) {
+public record DependenteResponse(
+        Integer idDependente,
+        String nome,
+        LocalDate dataNascimento,
+        String grauParentesco) {
 
     public static DependenteResponse from(Dependente dependente) {
         return new DependenteResponse(
-                dependente.getIdDependente(), dependente.getNome(), dependente.getDataNascimento());
+                dependente.getIdDependente(),
+                dependente.getNome(),
+                dependente.getDataNascimento(),
+                dependente.getGrauParentesco());
     }
 }

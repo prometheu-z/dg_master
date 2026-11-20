@@ -2,72 +2,124 @@ package projeto.bdd2.dgmaster;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import projeto.bdd2.dgmaster.entity.Aluguel;
+import projeto.bdd2.dgmaster.service.AluguelService;
 
+import java.util.List;
+
+/**
+ * Dados de demonstração alinhados ao modelo físico do RFC-003.
+ * A criação de reservas/itens usa as procedures oficiais para que as triggers
+ * calculem prazos, descontos, valores e movimentação de estoque.
+ */
 @Component
 public class DataSeeder implements CommandLineRunner {
 
-    private final JdbcTemplate jdbc;
+    private static final String SENHA_DEMO = "Senha@123";
 
-    public DataSeeder(JdbcTemplate jdbc) {
+    private final JdbcTemplate jdbc;
+    private final PasswordEncoder passwordEncoder;
+    private final AluguelService aluguelService;
+
+    public DataSeeder(JdbcTemplate jdbc, PasswordEncoder passwordEncoder, AluguelService aluguelService) {
         this.jdbc = jdbc;
+        this.passwordEncoder = passwordEncoder;
+        this.aluguelService = aluguelService;
     }
 
     @Override
     public void run(String... args) {
-        try {
-            Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM jogo", Integer.class);
-            if (count != null && count > 0) {
-                return;
-            }
-        } catch (Exception e) {
-            // Tabela ainda não existe no momento exato; continua
+        Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM jogo", Integer.class);
+        if (count != null && count > 0) {
+            return;
         }
 
-        jdbc.execute("INSERT IGNORE INTO cliente (cpf, nome, email, senha, data_nascimento, status_conta, credito_carteira) VALUES ('12345678901','Maria Silva','maria.silva@email.com','$2a$10$hashsimulado',DATE('1990-05-15'),1,150.00)");
-        jdbc.execute("INSERT IGNORE INTO cliente (cpf, nome, email, senha, data_nascimento, status_conta, credito_carteira) VALUES ('98765432109','João Santos','joao.santos@email.com','$2a$10$hashsimulado',DATE('1985-11-22'),1,50.00)");
-        jdbc.execute("INSERT IGNORE INTO cliente (cpf, nome, email, senha, data_nascimento, status_conta, credito_carteira) VALUES ('45678912300','Ana Costa','ana.costa@email.com','$2a$10$hashsimulado',DATE('1995-08-30'),1,0.00)");
-        jdbc.execute("INSERT IGNORE INTO cliente (cpf, nome, email, senha, data_nascimento, status_conta, credito_carteira) VALUES ('32165498700','Pedro Lima','pedro.lima@email.com','$2a$10$hashsimulado',DATE('1988-01-05'),0,0.00)");
+        jdbc.update("INSERT INTO categoria (nome_categoria) VALUES ('Estratégia'), ('Cooperativo'), ('Família'), ('Criatividade')");
 
-        jdbc.execute("INSERT IGNORE INTO dependente (nome, data_nascimento, cliente_cpf) VALUES ('Lucas Silva',DATE('2015-03-10'),'12345678901')");
-        jdbc.execute("INSERT IGNORE INTO gerente (nome, email, senha) VALUES ('Carlos Gerente','carlos.gerente@email.com','$2a$10$hashsimulado')");
+        String hash = passwordEncoder.encode(SENHA_DEMO);
+        jdbc.update("INSERT INTO cliente (nome, cpf, telefone, senha, data_nascimento, email) VALUES (?,?,?,?,?,?)",
+                "Maria Silva", "11144477735", "(11) 99999-0001", hash, "1990-05-15", "maria.silva@email.com");
+        jdbc.update("INSERT INTO cliente (nome, cpf, telefone, senha, data_nascimento, email) VALUES (?,?,?,?,?,?)",
+                "João Santos", "52998224725", "(11) 99999-0002", hash, "1985-11-22", "joao.santos@email.com");
+        jdbc.update("INSERT INTO cliente (nome, cpf, telefone, senha, data_nascimento, email) VALUES (?,?,?,?,?,?)",
+                "Ana Costa", "12345678909", "(11) 99999-0003", hash, "1995-08-30", "ana.costa@email.com");
+        jdbc.update("INSERT INTO cliente (nome, cpf, telefone, senha, data_nascimento, email) VALUES (?,?,?,?,?,?)",
+                "Pedro Lima", "39053344705", "(11) 99999-0004", hash, "1988-01-05", "pedro.lima@email.com");
 
-        String[] jogos = {
-            "('Azul','Estratégia','Cartas',8,25.00,120.00,3,1,1,1)",
-            "('Ticket to Ride','Estratégia','Família',8,35.00,150.00,2,1,1,1)",
-            "('Catan','Estratégia','Negociação',10,40.00,180.00,4,1,1,1)",
-            "('Dixit','Criatividade','Cartas',8,30.00,130.00,1,1,1,1)",
-            "('Carcassonne','Estratégia','Família',7,28.00,110.00,3,1,1,1)",
-            "('Pandemic','Cooperativo','Estratégia',13,45.00,200.00,2,1,1,1)",
-            "('Codinomes','Criatividade','Cartas',14,32.00,140.00,2,1,1,1)",
-            "('7 Wonders','Estratégia','Cartas',10,38.00,160.00,1,0,1,1)",
-            "('Splendor','Estratégia','Cartas',10,30.00,120.00,3,1,1,1)",
-            "('King of Tokyo','Estratégia','Família',8,35.00,150.00,2,1,1,1)",
-            "('Love Letter','Estratégia','Cartas',10,22.00,90.00,5,1,1,1)",
-            "('Mysterium','Cooperativo','Criatividade',10,42.00,170.00,1,1,1,1)",
-            "('Dobble','Família','Cartas',6,20.00,85.00,4,1,1,1)",
-            "('Uno','Família','Cartas',7,18.00,70.00,6,1,1,1)",
-            "('Magic: The Gathering Starter','Estratégia','Cartas',13,50.00,220.00,0,0,1,1)",
-            "('Root','Estratégia','Família',10,55.00,240.00,2,1,1,1)",
-            "('Gloomhaven','Estratégia','Cooperativo',14,120.00,500.00,1,1,1,1)",
-            "('Terraforming Mars','Estratégia','Cartas',12,80.00,350.00,1,1,1,1)",
-            "('Wingspan','Estratégia','Família',10,48.00,190.00,2,1,1,1)",
-            "('Brass: Birmingham','Estratégia','Família',14,95.00,380.00,1,1,1,1)"
-        };
-        for (String j : jogos) {
-            jdbc.execute("INSERT IGNORE INTO jogo (nome, categoria, genero, faixa_etaria_recomendada, preco_locacao, valor_reposicao, quantidade_estoque, status_disponibilidade, ativo_catalogo, gerente_id) VALUES " + j);
+        jdbc.update("INSERT INTO dependente (id_cliente, nome, data_nascimento, grau_parentesco) "
+                        + "SELECT id_cliente, ?, ?, ? FROM cliente WHERE cpf = ?",
+                "Lucas Silva", "2015-03-10", "FILHO", "11144477735");
+
+        jdbc.update("INSERT INTO gerente (nome, email, senha, matricula) VALUES (?,?,?,?)",
+                "Carlos Gerente", "carlos.gerente@email.com", hash, "GER001");
+
+        semearJogos();
+
+        Integer gerenteId = jdbc.queryForObject(
+                "SELECT id_gerente FROM gerente WHERE matricula = 'GER001'", Integer.class);
+
+        // Reserva em aberto (RN3: expira em 24h)
+        Aluguel reservaMaria = aluguelService.solicitarReserva(
+                "11144477735", null,
+                List.of(idJogo("Azul"), idJogo("Dixit")));
+
+        // Aluguel retirado e devolvido (FINALIZADO) — exercita sp_retirar/sp_finalizar
+        Aluguel finalizado = aluguelService.solicitarReserva(
+                "52998224725", null,
+                List.of(idJogo("Catan"), idJogo("Splendor")));
+        aluguelService.retirarAluguel(finalizado.getIdAluguel(), gerenteId);
+        aluguelService.finalizarAluguel(finalizado.getIdAluguel(), java.time.LocalDate.now());
+
+        // Aluguel retirado pelo gerente (RETIRADO)
+        Aluguel retirado = aluguelService.solicitarReserva(
+                "12345678909", null, List.of(idJogo("Pandemic")));
+        aluguelService.retirarAluguel(retirado.getIdAluguel(), gerenteId);
+
+        // Reserva cancelada (CANCELADO) — trigger devolve o estoque
+        Aluguel cancelado = aluguelService.solicitarReserva(
+                "39053344705", null, List.of(idJogo("Uno")));
+        aluguelService.cancelarReserva(cancelado.getIdAluguel(), "39053344705");
+
+        // Mantém a variável em uso explícito para facilitar depuração do seed.
+        if (reservaMaria.getIdAluguel() == null) {
+            throw new IllegalStateException("Falha ao semear a reserva de demonstração");
         }
+    }
 
-        jdbc.execute("INSERT IGNORE INTO aluguel_reserva (data_hora_reserva, data_limite_retirada, data_limite_devolucao, data_devolucao_real, status, valor_total, credito_aplicado, quantidade_renovacoes, cliente_cpf, dependente_id, termos_danos, termos_contrato, precificacao_multa, data_assinatura) VALUES (NOW(), DATE_ADD(NOW(), INTERVAL 7 DAY), DATE_ADD(NOW(), INTERVAL 14 DAY), NULL, 'RESERVADO', 55.00, 0.00, 0, '12345678901', 1, 'Termos padrao', 'Contrato padrao', 0.00, NOW())");
-        jdbc.execute("INSERT IGNORE INTO aluguel_reserva (data_hora_reserva, data_limite_retirada, data_limite_devolucao, data_devolucao_real, status, valor_total, credito_aplicado, quantidade_renovacoes, cliente_cpf, dependente_id, termos_danos, termos_contrato, precificacao_multa, data_assinatura) VALUES (DATE_SUB(NOW(), INTERVAL 5 DAY), DATE_SUB(NOW(), INTERVAL 3 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY), 'DEVOLVIDO', 35.00, 10.00, 0, '98765432109', NULL, 'Termos padrao', 'Contrato padrao', 0.00, DATE_SUB(NOW(), INTERVAL 5 DAY))");
-        jdbc.execute("INSERT IGNORE INTO aluguel_reserva (data_hora_reserva, data_limite_retirada, data_limite_devolucao, data_devolucao_real, status, valor_total, credito_aplicado, quantidade_renovacoes, cliente_cpf, dependente_id, termos_danos, termos_contrato, precificacao_multa, data_assinatura) VALUES (DATE_SUB(NOW(), INTERVAL 10 DAY), DATE_SUB(NOW(), INTERVAL 8 DAY), DATE_SUB(NOW(), INTERVAL 5 DAY), NULL, 'ATRASADO', 80.00, 0.00, 1, '45678912300', NULL, 'Termos padrao', 'Contrato padrao', 15.00, DATE_SUB(NOW(), INTERVAL 10 DAY))");
-        jdbc.execute("INSERT IGNORE INTO aluguel_reserva (data_hora_reserva, data_limite_retirada, data_limite_devolucao, data_devolucao_real, status, valor_total, credito_aplicado, quantidade_renovacoes, cliente_cpf, dependente_id, termos_danos, termos_contrato, precificacao_multa, data_assinatura) VALUES (DATE_SUB(NOW(), INTERVAL 3 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_ADD(NOW(), INTERVAL 2 DAY), NULL, 'RETIRADO', 45.00, 0.00, 0, '98765432109', NULL, 'Termos padrao', 'Contrato padrao', 0.00, DATE_SUB(NOW(), INTERVAL 3 DAY))");
-        jdbc.execute("INSERT IGNORE INTO aluguel_reserva (data_hora_reserva, data_limite_retirada, data_limite_devolucao, data_devolucao_real, status, valor_total, credito_aplicado, quantidade_renovacoes, cliente_cpf, dependente_id, termos_danos, termos_contrato, precificacao_multa, data_assinatura) VALUES (DATE_SUB(NOW(), INTERVAL 15 DAY), DATE_SUB(NOW(), INTERVAL 13 DAY), DATE_SUB(NOW(), INTERVAL 10 DAY), NULL, 'EXPIRADO', 25.00, 0.00, 0, '12345678901', NULL, 'Termos padrao', 'Contrato padrao', 0.00, DATE_SUB(NOW(), INTERVAL 15 DAY))");
-        jdbc.execute("INSERT IGNORE INTO aluguel_reserva (data_hora_reserva, data_limite_retirada, data_limite_devolucao, data_devolucao_real, status, valor_total, credito_aplicado, quantidade_renovacoes, cliente_cpf, dependente_id, termos_danos, termos_contrato, precificacao_multa, data_assinatura) VALUES (DATE_SUB(NOW(), INTERVAL 2 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_ADD(NOW(), INTERVAL 5 DAY), NULL, 'RESERVADO', 120.00, 30.00, 0, '45678912300', NULL, 'Termos padrao', 'Contrato padrao', 0.00, DATE_SUB(NOW(), INTERVAL 2 DAY))");
-        jdbc.execute("INSERT IGNORE INTO aluguel_reserva (data_hora_reserva, data_limite_retirada, data_limite_devolucao, data_devolucao_real, status, valor_total, credito_aplicado, quantidade_renovacoes, cliente_cpf, dependente_id, termos_danos, termos_contrato, precificacao_multa, data_assinatura) VALUES (DATE_SUB(NOW(), INTERVAL 20 DAY), DATE_SUB(NOW(), INTERVAL 18 DAY), DATE_SUB(NOW(), INTERVAL 14 DAY), DATE_SUB(NOW(), INTERVAL 14 DAY), 'DEVOLVIDO', 28.00, 0.00, 0, '32165498700', NULL, 'Termos padrao', 'Contrato padrao', 0.00, DATE_SUB(NOW(), INTERVAL 20 DAY))");
-        jdbc.execute("INSERT IGNORE INTO aluguel_reserva (data_hora_reserva, data_limite_retirada, data_limite_devolucao, data_devolucao_real, status, valor_total, credito_aplicado, quantidade_renovacoes, cliente_cpf, dependente_id, termos_danos, termos_contrato, precificacao_multa, data_assinatura) VALUES (DATE_SUB(NOW(), INTERVAL 25 DAY), DATE_SUB(NOW(), INTERVAL 23 DAY), DATE_SUB(NOW(), INTERVAL 20 DAY), NULL, 'CANCELADO', 0.00, 0.00, 0, '98765432109', NULL, 'Termos padrao', 'Contrato padrao', 0.00, DATE_SUB(NOW(), INTERVAL 25 DAY))");
+    private void semearJogos() {
+        inserirJogo("Azul", "Estratégia", "Abstrato de draft e coleção de padrões.", 8, "25.00", "120.00", 3);
+        inserirJogo("Ticket to Ride", "Estratégia", "Construção de rotas ferroviárias.", 8, "35.00", "150.00", 2);
+        inserirJogo("Catan", "Estratégia", "Colonização e negociação de recursos.", 10, "40.00", "180.00", 4);
+        inserirJogo("Dixit", "Criatividade", "Narrativa e associação de imagens.", 8, "30.00", "130.00", 1);
+        inserirJogo("Carcassonne", "Estratégia", "Colocação de tiles e controle de áreas.", 7, "28.00", "110.00", 3);
+        inserirJogo("Pandemic", "Cooperativo", "Contenção de pandemias em equipe.", 13, "45.00", "200.00", 2);
+        inserirJogo("Codinomes", "Criatividade", "Comunicação por pistas curtas.", 14, "32.00", "140.00", 2);
+        inserirJogo("7 Wonders", "Estratégia", "Civilizações e draft de cartas.", 10, "38.00", "160.00", 1);
+        inserirJogo("Splendor", "Estratégia", "Motor de gemas e compras.", 10, "30.00", "120.00", 3);
+        inserirJogo("King of Tokyo", "Família", "Disputa de monstros em Tóquio.", 8, "35.00", "150.00", 2);
+        inserirJogo("Love Letter", "Família", "Dedução leve com poucas cartas.", 10, "22.00", "90.00", 5);
+        inserirJogo("Mysterium", "Cooperativo", "Mistério cooperativo de fantasmas.", 10, "42.00", "170.00", 1);
+        inserirJogo("Dobble", "Família", "Reação e reconhecimento de símbolos.", 6, "20.00", "85.00", 4);
+        inserirJogo("Uno", "Família", "Clássico de combinação de cores e números.", 7, "18.00", "70.00", 6);
+        inserirJogo("Magic: The Gathering Starter", "Estratégia", "Duelo de cartas colecionáveis.", 13, "50.00", "220.00", 1);
+        inserirJogo("Root", "Estratégia", "Facciosidade em floresta assimétrica.", 10, "55.00", "240.00", 2);
+        inserirJogo("Gloomhaven", "Cooperativo", "Campanha tática de fantasia.", 14, "120.00", "500.00", 1);
+        inserirJogo("Terraforming Mars", "Estratégia", "Terraformação econômica de Marte.", 12, "80.00", "350.00", 1);
+        inserirJogo("Wingspan", "Família", "Coleção de aves e motor de recursos.", 10, "48.00", "190.00", 2);
+        inserirJogo("Brass: Birmingham", "Estratégia", "Rede industrial e econômica.", 14, "95.00", "380.00", 1);
+    }
 
-        jdbc.execute("INSERT IGNORE INTO contem (jogo_codigo, aluguel_id, valor_unitario_cobrado) VALUES (1, 1, 55.00), (2, 2, 35.00), (3, 3, 40.00), (4, 3, 40.00), (5, 4, 45.00), (6, 5, 25.00), (7, 6, 60.00), (8, 6, 60.00), (9, 7, 28.00), (10, 8, 0.00)");
-        jdbc.execute("INSERT IGNORE INTO penalidade (tipo_penalidade, valor_multa, multa_paga, data_fim_suspensao, aluguel_id) VALUES ('Atraso na devolucao', 15.00, 0, DATE_ADD(NOW(), INTERVAL 30 DAY), 3), ('Dano ao jogo', 30.00, 0, NULL, 3)");
+    private void inserirJogo(String titulo, String categoria, String descricao, int faixaEtaria,
+                             String valorDiaria, String valorReposicao, int estoque) {
+        jdbc.update("INSERT INTO jogo (id_categoria, titulo, descricao, faixa_etaria_minima, "
+                        + "valor_diaria, valor_reposicao, quantidade_estoque) "
+                        + "SELECT id_categoria, ?, ?, ?, ?, ?, ? FROM categoria WHERE nome_categoria = ?",
+                titulo, descricao, faixaEtaria, valorDiaria, valorReposicao, estoque, categoria);
+    }
+
+    private Integer idJogo(String titulo) {
+        return jdbc.queryForObject("SELECT id_jogo FROM jogo WHERE titulo = ?", Integer.class, titulo);
     }
 }

@@ -6,9 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Entity
 @Table(name = "gerente")
 @Getter
@@ -16,19 +13,21 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Gerente {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_gerente")
     private Integer idGerente;
 
-    @Column(nullable = false, length = 150)
+    @Column(nullable = false, length = 100)
     private String nome;
 
-    @Column(nullable = false, unique = true, length = 150)
+    @Column(nullable = false, unique = true, length = 254)
     private String email;
 
     @Column(nullable = false, length = 255)
     private String senha;
 
-    @OneToMany(mappedBy = "gerente")
-    private List<Jogo> jogos = new ArrayList<>();
+    @Column(nullable = false, unique = true, length = 20)
+    private String matricula;
 }

@@ -11,7 +11,7 @@
 	 • Tabela associativa `contem` (Jogo ↔ AluguelReserva)
  • [x] Criar repositórios Spring Data JPA para todas as entidades.
  • [x] Criar script de criação de tabelas em `src/main/resources/schema.sql`.
- • [ ] Configurar migrações versionadas com Flyway ou Liquibase, se necessário.
+ • [x] Usar `db/01_schema_objetos.sql` como script manual de criação do banco; sem Flyway/Liquibase.
  • [x] Persistir preço unitário com desconto na associação de cada aluguel.
 
 2. Autenticação e Segurança (Épico 1 / RNF01, RNF03)
@@ -86,7 +86,7 @@
 9. Infraestrutura e Documentação
 
  • [x] Configurar conexão MySQL por variáveis de ambiente, sem credenciais no repositório.
- • [ ] Definir estratégia de inicialização do banco: hoje `schema.sql` é o DDL de referência (HU10) e o runtime usa `ddl-auto=update`; migrações versionadas (Flyway/Liquibase) permanecem pendentes.
+ • [x] Inicializar o MySQL executando `db/01_schema_objetos.sql` manualmente; o Hibernate usa `ddl-auto=validate` e não altera o schema.
  • [x] Configurar Docker para desenvolvimento e homologação.
  • [x] Adicionar documentação interativa com springdoc/OpenAPI.
  • [x] Atualizar a RFC conforme as decisões de implementação.

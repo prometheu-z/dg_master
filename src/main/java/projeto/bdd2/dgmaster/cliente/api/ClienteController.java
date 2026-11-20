@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import projeto.bdd2.dgmaster.entity.Dependente;
 import projeto.bdd2.dgmaster.security.UserPrincipal;
 import projeto.bdd2.dgmaster.service.ClienteService;
+import projeto.bdd2.dgmaster.util.CpfValidator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,11 +57,14 @@ public class ClienteController {
         Dependente dependente = new Dependente();
         dependente.setNome(request.nome());
         dependente.setDataNascimento(request.dataNascimento());
+        dependente.setGrauParentesco(request.grauParentesco());
         return DependenteResponse.from(clienteService.adicionarDependente(cpf, dependente));
     }
 
     private void validarTitular(UserPrincipal principal, String cpf) {
-        if (principal == null || !"CLIENTE".equals(principal.getTipo()) || !cpf.equals(principal.getCpf())) {
+        String cpfSanitizado = CpfValidator.sanitizar(cpf);
+        if (principal == null || !"CLIENTE".equals(principal.getTipo())
+                || !cpfSanitizado.equals(principal.getCpf())) {
             throw new AccessDeniedException("Clientes só podem acessar o próprio perfil e dependentes");
         }
     }

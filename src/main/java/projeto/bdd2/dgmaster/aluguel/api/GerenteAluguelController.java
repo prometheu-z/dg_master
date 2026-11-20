@@ -4,7 +4,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import projeto.bdd2.dgmaster.entity.AluguelReserva;
+import projeto.bdd2.dgmaster.entity.Aluguel;
 import projeto.bdd2.dgmaster.service.AluguelService;
 
 import java.util.ArrayList;
@@ -24,8 +24,8 @@ public class GerenteAluguelController {
     @GetMapping("/prazos")
     public List<AluguelResponse> listarPrazos() {
         List<AluguelResponse> respostas = new ArrayList<>();
-        for (AluguelReserva reserva : aluguelService.listarPrazosGerenciais()) {
-            respostas.add(AluguelResponse.from(reserva));
+        for (Aluguel aluguel : aluguelService.listarPrazosGerenciais()) {
+            respostas.add(AluguelResponse.from(aluguel));
         }
         return respostas;
     }

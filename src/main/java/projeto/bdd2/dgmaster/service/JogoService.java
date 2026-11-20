@@ -2,137 +2,84 @@ package projeto.bdd2.dgmaster.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import projeto.bdd2.dgmaster.entity.Gerente;
+import projeto.bdd2.dgmaster.entity.Categoria;
 import projeto.bdd2.dgmaster.entity.Jogo;
-import projeto.bdd2.dgmaster.entity.StatusAluguel;
-import projeto.bdd2.dgmaster.repository.GerenteRepository;
+import projeto.bdd2.dgmaster.repository.CategoriaRepository;
 import projeto.bdd2.dgmaster.repository.JogoRepository;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 @Service
 public class JogoService {
 
     private final JogoRepository jogoRepository;
-    private final GerenteRepository gerenteRepository;
+    private final CategoriaRepository categoriaRepository;
 
-    public JogoService(JogoRepository jogoRepository, GerenteRepository gerenteRepository) {
+    public JogoService(JogoRepository jogoRepository, CategoriaRepository categoriaRepository) {
         this.jogoRepository = jogoRepository;
-        this.gerenteRepository = gerenteRepository;
+        this.categoriaRepository = categoriaRepository;
     }
 
     @Transactional
-    public Jogo salvar(Jogo jogo) {
+    public Jogo salvar(Jogo jogo, String nomeCategoria) {
         validarJogo(jogo);
-
-        if (jogo.getGerente() != null && jogo.getGerente().getIdGerente() == null) {
-            Gerente gerentePersistido = gerenteRepository.save(jogo.getGerente());
-            jogo.setGerente(gerentePersistido);
-        }
-
+        jogo.setCategoria(resolverCategoria(nomeCategoria));
         return jogoRepository.save(jogo);
     }
 
     @Transactional
-    public Jogo salvarParaGerente(Jogo jogo, Integer idGerente) {
-        Gerente gerente = gerenteRepository.findById(idGerente)
-                .orElseThrow(() -> new IllegalArgumentException("Gerente não encontrado: " + idGerente));
-        jogo.setGerente(gerente);
-        return salvar(jogo);
-    }
-
-    @Transactional
-    public Jogo atualizar(Integer codigoJogo, Jogo alteracoes, Integer idGerente) {
+    public Jogo atualizar(Integer idJogo, Jogo alteracoes, String nomeCategoria) {
         validarJogo(alteracoes);
-        Jogo jogo = buscarAtivo(codigoJogo);
-        jogo.setNome(alteracoes.getNome());
-        jogo.setCategoria(alteracoes.getCategoria());
-        jogo.setGenero(alteracoes.getGenero());
-        jogo.setFaixaEtariaRecomendada(alteracoes.getFaixaEtariaRecomendada());
-        jogo.setPrecoLocacao(alteracoes.getPrecoLocacao());
+        Jogo jogo = buscarPorId(idJogo);
+        jogo.setTitulo(alteracoes.getTitulo());
+        jogo.setDescricao(alteracoes.getDescricao());
+        jogo.setFaixaEtariaMinima(alteracoes.getFaixaEtariaMinima());
+        jogo.setValorDiaria(alteracoes.getValorDiaria());
         jogo.setValorReposicao(alteracoes.getValorReposicao());
         jogo.setQuantidadeEstoque(alteracoes.getQuantidadeEstoque());
-        jogo.setStatusDisponibilidade(alteracoes.getQuantidadeEstoque() > 0);
-        if (jogo.getGerente() == null) {
-            jogo.setGerente(gerenteRepository.findById(idGerente)
-                    .orElseThrow(() -> new IllegalArgumentException("Gerente não encontrado: " + idGerente)));
-        }
+        jogo.setCategoria(resolverCategoria(nomeCategoria));
         return jogoRepository.save(jogo);
     }
 
     @Transactional
-    public void excluir(Integer codigoJogo) {
-        Jogo jogo = buscarAtivo(codigoJogo);
-        Set<StatusAluguel> estadosComPosse = Set.of(
-                StatusAluguel.RESERVADO,
-                StatusAluguel.RETIRADO,
-                StatusAluguel.ATRASADO);
-        for (var item : jogo.getItensAluguel()) {
-            if (estadosComPosse.contains(item.getAluguelReserva().getStatus())) {
-                throw new IllegalStateException("Não é possível remover um jogo reservado ou ainda não devolvido");
-            }
+    public void excluir(Integer idJogo) {
+        Jogo jogo = buscarPorId(idJogo);
+        if (jogo.getItensAluguel() != null && !jogo.getItensAluguel().isEmpty()) {
+            throw new IllegalStateException(
+                    "Não é possível remover um jogo com histórico de aluguéis; preservando a integridade referencial");
         }
-        jogo.setAtivoCatalogo(false);
-        jogoRepository.save(jogo);
-    }
-
-    private void validarJogo(Jogo jogo) {
-        if (jogo == null) {
-            throw new IllegalArgumentException("Jogo obrigatório");
-        }
-
-        if (jogo.getNome() == null || jogo.getNome().isBlank()) {
-            throw new IllegalArgumentException("Nome do jogo obrigatório");
-        }
-        if (jogo.getPrecoLocacao() == null || jogo.getPrecoLocacao().signum() <= 0) {
-            throw new IllegalArgumentException("Preço de locação precisa ser maior que zero");
-        }
-        if (jogo.getValorReposicao() == null || jogo.getValorReposicao().signum() <= 0) {
-            throw new IllegalArgumentException("Valor de reposição precisa ser maior que zero");
-        }
-        if (jogo.getQuantidadeEstoque() == null || jogo.getQuantidadeEstoque() < 0) {
-            throw new IllegalArgumentException("Quantidade de estoque inválida");
-        }
+        jogoRepository.delete(jogo);
     }
 
     @Transactional
-    public Jogo atualizarEstoque(Integer codigoJogo, Integer quantidadeDisponivel) {
-        Jogo jogo = buscarPorId(codigoJogo);
+    public Jogo atualizarEstoque(Integer idJogo, Integer quantidadeDisponivel) {
+        Jogo jogo = buscarPorId(idJogo);
         if (quantidadeDisponivel == null || quantidadeDisponivel < 0) {
             throw new IllegalArgumentException("Quantidade de estoque inválida");
         }
-
         jogo.setQuantidadeEstoque(quantidadeDisponivel);
-        jogo.setStatusDisponibilidade(quantidadeDisponivel > 0);
         return jogoRepository.save(jogo);
     }
 
     @Transactional(readOnly = true)
     public List<Jogo> listarTodos() {
-        List<Jogo> jogos = new ArrayList<>(jogoRepository.findAll());
-        jogos.removeIf(jogo -> !jogo.isAtivoCatalogo());
-        return jogos;
+        return new ArrayList<>(jogoRepository.findAll());
     }
 
     @Transactional(readOnly = true)
-    public List<Jogo> filtrar(String categoria, String genero, Integer faixaEtariaMaxima) {
+    public List<Jogo> filtrar(String categoria, Integer faixaEtariaMaxima) {
         List<Jogo> jogos = new ArrayList<>(jogoRepository.findAll());
-        jogos.removeIf(jogo -> !jogo.isAtivoCatalogo());
 
         if (categoria != null && !categoria.isBlank()) {
-            jogos.removeIf(jogo -> !Objects.equals(jogo.getCategoria(), categoria));
-        }
-
-        if (genero != null && !genero.isBlank()) {
-            jogos.removeIf(jogo -> !Objects.equals(jogo.getGenero(), genero));
+            jogos.removeIf(jogo -> jogo.getCategoria() == null
+                    || !Objects.equals(jogo.getCategoria().getNomeCategoria(), categoria));
         }
 
         if (faixaEtariaMaxima != null) {
-            jogos.removeIf(jogo -> jogo.getFaixaEtariaRecomendada() == null ||
-                    jogo.getFaixaEtariaRecomendada() > faixaEtariaMaxima);
+            jogos.removeIf(jogo -> jogo.getFaixaEtariaMinima() == null
+                    || jogo.getFaixaEtariaMinima() > faixaEtariaMaxima);
         }
 
         return jogos;
@@ -146,10 +93,30 @@ public class JogoService {
 
     @Transactional(readOnly = true)
     public Jogo buscarAtivo(Integer id) {
-        Jogo jogo = buscarPorId(id);
-        if (!jogo.isAtivoCatalogo()) {
-            throw new IllegalArgumentException("Jogo não encontrado no catálogo: " + id);
+        return buscarPorId(id);
+    }
+
+    private Categoria resolverCategoria(String nomeCategoria) {
+        String nome = (nomeCategoria == null || nomeCategoria.isBlank()) ? "Geral" : nomeCategoria.trim();
+        return categoriaRepository.findByNomeCategoriaIgnoreCase(nome)
+                .orElseGet(() -> categoriaRepository.save(new Categoria(null, nome, new ArrayList<>())));
+    }
+
+    private void validarJogo(Jogo jogo) {
+        if (jogo == null) {
+            throw new IllegalArgumentException("Jogo obrigatório");
         }
-        return jogo;
+        if (jogo.getTitulo() == null || jogo.getTitulo().isBlank()) {
+            throw new IllegalArgumentException("Título do jogo obrigatório");
+        }
+        if (jogo.getValorDiaria() == null || jogo.getValorDiaria().signum() <= 0) {
+            throw new IllegalArgumentException("Valor da diária precisa ser maior que zero");
+        }
+        if (jogo.getValorReposicao() == null || jogo.getValorReposicao().signum() <= 0) {
+            throw new IllegalArgumentException("Valor de reposição precisa ser maior que zero");
+        }
+        if (jogo.getQuantidadeEstoque() == null || jogo.getQuantidadeEstoque() < 0) {
+            throw new IllegalArgumentException("Quantidade de estoque inválida");
+        }
     }
 }

@@ -8,11 +8,11 @@ import jakarta.validation.constraints.PositiveOrZero;
 import java.math.BigDecimal;
 
 public record JogoRequest(
-        @NotBlank String nome,
-        String categoria,
-        String genero,
-        @PositiveOrZero Integer faixaEtariaRecomendada,
-        @NotNull @DecimalMin("0.01") BigDecimal precoLocacao,
+        @NotBlank String titulo,
+        @NotBlank String categoria,
+        String descricao,
+        @PositiveOrZero Integer faixaEtariaMinima,
+        @NotNull @DecimalMin("0.01") BigDecimal valorDiaria,
         @NotNull @DecimalMin("0.01") BigDecimal valorReposicao,
         @NotNull @PositiveOrZero Integer quantidadeEstoque) {
 }

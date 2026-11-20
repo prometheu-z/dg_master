@@ -5,26 +5,26 @@ import projeto.bdd2.dgmaster.entity.Jogo;
 import java.math.BigDecimal;
 
 public record JogoResponse(
-        Integer codigoJogo,
-        String nome,
+        Integer idJogo,
+        String titulo,
         String categoria,
-        String genero,
-        Integer faixaEtariaRecomendada,
-        BigDecimal precoLocacao,
+        String descricao,
+        Integer faixaEtariaMinima,
+        BigDecimal valorDiaria,
         BigDecimal valorReposicao,
         Integer quantidadeEstoque,
-        boolean statusDisponibilidade) {
+        boolean disponivel) {
 
     public static JogoResponse from(Jogo jogo) {
         return new JogoResponse(
-                jogo.getCodigoJogo(),
-                jogo.getNome(),
-                jogo.getCategoria(),
-                jogo.getGenero(),
-                jogo.getFaixaEtariaRecomendada(),
-                jogo.getPrecoLocacao(),
+                jogo.getIdJogo(),
+                jogo.getTitulo(),
+                jogo.getCategoria() == null ? null : jogo.getCategoria().getNomeCategoria(),
+                jogo.getDescricao(),
+                jogo.getFaixaEtariaMinima(),
+                jogo.getValorDiaria(),
                 jogo.getValorReposicao(),
                 jogo.getQuantidadeEstoque(),
-                jogo.isStatusDisponibilidade());
+                jogo.isDisponivel());
     }
 }

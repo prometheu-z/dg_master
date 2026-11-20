@@ -14,10 +14,11 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import projeto.bdd2.dgmaster.auth.AuthController;
 import projeto.bdd2.dgmaster.auth.CadastroRequest;
 import projeto.bdd2.dgmaster.auth.GerenteRequest;
-import projeto.bdd2.dgmaster.entity.AluguelReserva;
+import projeto.bdd2.dgmaster.entity.Aluguel;
 import projeto.bdd2.dgmaster.entity.Dependente;
 import projeto.bdd2.dgmaster.entity.StatusAluguel;
-import projeto.bdd2.dgmaster.repository.AluguelReservaRepository;
+import projeto.bdd2.dgmaster.entity.StatusPagamento;
+import projeto.bdd2.dgmaster.repository.AluguelRepository;
 import projeto.bdd2.dgmaster.repository.PenalidadeRepository;
 import projeto.bdd2.dgmaster.security.UserPrincipal;
 import projeto.bdd2.dgmaster.service.AluguelService;
@@ -25,8 +26,8 @@ import projeto.bdd2.dgmaster.service.ClienteService;
 import projeto.bdd2.dgmaster.service.EstatisticasService;
 import projeto.bdd2.dgmaster.service.JogoService;
 import projeto.bdd2.dgmaster.service.PenalidadeService;
+import projeto.bdd2.dgmaster.util.MensagemErro;
 
-import java.time.LocalDateTime;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -40,7 +41,7 @@ public class WebMvpController {
     private final AluguelService aluguelService;
     private final PenalidadeService penalidadeService;
     private final EstatisticasService estatisticasService;
-    private final AluguelReservaRepository aluguelReservaRepository;
+    private final AluguelRepository aluguelRepository;
     private final PenalidadeRepository penalidadeRepository;
 
     public WebMvpController(
@@ -50,7 +51,7 @@ public class WebMvpController {
             AluguelService aluguelService,
             PenalidadeService penalidadeService,
             EstatisticasService estatisticasService,
-            AluguelReservaRepository aluguelReservaRepository,
+            AluguelRepository aluguelRepository,
             PenalidadeRepository penalidadeRepository) {
         this.authController = authController;
         this.clienteService = clienteService;
@@ -58,7 +59,7 @@ public class WebMvpController {
         this.aluguelService = aluguelService;
         this.penalidadeService = penalidadeService;
         this.estatisticasService = estatisticasService;
-        this.aluguelReservaRepository = aluguelReservaRepository;
+        this.aluguelRepository = aluguelRepository;
         this.penalidadeRepository = penalidadeRepository;
     }
 
@@ -88,10 +89,11 @@ public class WebMvpController {
             }
             redirectAttributes.addFlashAttribute("erro", "Não foi possível criar a conta. Verifique os dados ou use outro e-mail.");
         } catch (RuntimeException exception) {
-            redirectAttributes.addFlashAttribute("erro", exception.getMessage());
+            redirectAttributes.addFlashAttribute("erro", MensagemErro.extrair(exception));
         }
         return "redirect:/cadastro";
     }
+
     @GetMapping("/admin")
     public String admin() {
         return "admin";
@@ -102,12 +104,12 @@ public class WebMvpController {
             @RequestParam String nome,
             @RequestParam String email,
             @RequestParam String senha,
+            @RequestParam String matricula,
             @RequestParam(required = false) String chaveAdmin,
             RedirectAttributes redirectAttributes) {
         try {
             var resultado = authController.cadastrarGerente(
-                    new GerenteRequest(nome, email, senha, chaveAdmin)
-            );
+                    new GerenteRequest(nome, email, senha, matricula, chaveAdmin));
 
             if (resultado.getStatusCode().is2xxSuccessful()) {
                 redirectAttributes.addFlashAttribute("sucesso", "Gerente criado com sucesso.");
@@ -116,8 +118,8 @@ public class WebMvpController {
 
             redirectAttributes.addFlashAttribute("erro", "Não foi possível criar o gerente. Verifique os dados ou use outro e-mail.");
             return "redirect:/admin";
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("erro", "Erro ao criar gerente: " + e.getMessage());
+        } catch (Exception exception) {
+            redirectAttributes.addFlashAttribute("erro", "Erro ao criar gerente: " + MensagemErro.extrair(exception));
             return "redirect:/admin";
         }
     }
@@ -127,9 +129,8 @@ public class WebMvpController {
             @AuthenticationPrincipal UserPrincipal principal,
             @ModelAttribute CatalogoFiltro filtro,
             Model model) {
-        model.addAttribute("jogos", jogoService.filtrar(filtro.categoria(), filtro.genero(), filtro.faixaEtaria()));
+        model.addAttribute("jogos", jogoService.filtrar(filtro.categoria(), filtro.faixaEtaria()));
         model.addAttribute("categoria", filtro.categoria() == null ? "" : filtro.categoria());
-        model.addAttribute("genero", filtro.genero() == null ? "" : filtro.genero());
         model.addAttribute("faixaEtaria", filtro.faixaEtaria());
         model.addAttribute("principal", principal);
         model.addAttribute("cliente", principal != null && "CLIENTE".equals(principal.getTipo()));
@@ -139,13 +140,12 @@ public class WebMvpController {
         return "catalogo";
     }
 
-    @GetMapping("/catalogo/{codigo}")
+    @GetMapping("/catalogo/{id}")
     public String detalhesJogo(
-            @PathVariable Integer codigo,
+            @PathVariable Integer id,
             @AuthenticationPrincipal UserPrincipal principal,
             Model model) {
-        var jogo = jogoService.buscarAtivo(codigo);
-        model.addAttribute("jogo", jogo);
+        model.addAttribute("jogo", jogoService.buscarAtivo(id));
         model.addAttribute("principal", principal);
         model.addAttribute("cliente", principal != null && "CLIENTE".equals(principal.getTipo()));
         model.addAttribute("dependentes", principal != null && "CLIENTE".equals(principal.getTipo())
@@ -167,7 +167,7 @@ public class WebMvpController {
             redirectAttributes.addFlashAttribute("sucesso", "Reserva criada. Retire os jogos em até 24 horas.");
             return "redirect:/cliente";
         } catch (RuntimeException exception) {
-            redirectAttributes.addFlashAttribute("erro", exception.getMessage());
+            redirectAttributes.addFlashAttribute("erro", MensagemErro.extrair(exception));
             return "redirect:/catalogo";
         }
     }
@@ -176,19 +176,16 @@ public class WebMvpController {
     @PreAuthorize("hasRole('CLIENTE')")
     public String painelCliente(@AuthenticationPrincipal UserPrincipal principal, Model model) {
         exigirTipo(principal, "CLIENTE");
-        var cliente = clienteService.buscarPorCpf(principal.getCpf());
         model.addAttribute("principal", principal);
-        model.addAttribute("cliente", cliente);
+        model.addAttribute("cliente", clienteService.buscarPorCpf(principal.getCpf()));
         model.addAttribute("dependentes", clienteService.listarDependentes(principal.getCpf()));
-        model.addAttribute("alugueis", aluguelReservaRepository.findByClienteCpf(principal.getCpf()));
-        model.addAttribute("alugueisAtivos", aluguelReservaRepository.findByClienteCpfAndStatusIn(
-                principal.getCpf(), 
-                List.of(StatusAluguel.RESERVADO, StatusAluguel.RETIRADO, StatusAluguel.ATRASADO)
-        ));
-        model.addAttribute("alugueisHistorico", aluguelReservaRepository.findByClienteCpfAndStatusIn(
+        model.addAttribute("alugueis", aluguelRepository.findByClienteCpf(principal.getCpf()));
+        model.addAttribute("alugueisAtivos", aluguelRepository.findByClienteCpfAndStatusAluguelIn(
                 principal.getCpf(),
-                List.of(StatusAluguel.DEVOLVIDO, StatusAluguel.EXPIRADO, StatusAluguel.CANCELADO)
-        ));
+                List.of(StatusAluguel.RESERVADO, StatusAluguel.RETIRADO)));
+        model.addAttribute("alugueisHistorico", aluguelRepository.findByClienteCpfAndStatusAluguelIn(
+                principal.getCpf(),
+                List.of(StatusAluguel.FINALIZADO, StatusAluguel.EXPIRADO, StatusAluguel.CANCELADO)));
         return "cliente";
     }
 
@@ -198,16 +195,18 @@ public class WebMvpController {
             @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam String nome,
             @RequestParam LocalDate dataNascimento,
+            @RequestParam(required = false) String grauParentesco,
             RedirectAttributes redirectAttributes) {
         exigirTipo(principal, "CLIENTE");
         Dependente dependente = new Dependente();
         dependente.setNome(nome);
         dependente.setDataNascimento(dataNascimento);
+        dependente.setGrauParentesco(grauParentesco);
         try {
             clienteService.adicionarDependente(principal.getCpf(), dependente);
             redirectAttributes.addFlashAttribute("sucesso", "Perfil de dependente cadastrado.");
         } catch (RuntimeException exception) {
-            redirectAttributes.addFlashAttribute("erro", exception.getMessage());
+            redirectAttributes.addFlashAttribute("erro", MensagemErro.extrair(exception));
         }
         return "redirect:/cliente";
     }
@@ -217,14 +216,15 @@ public class WebMvpController {
     public String atualizarPerfil(
             @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam String nome,
+            @RequestParam(required = false) String telefone,
             @RequestParam String email,
             RedirectAttributes redirectAttributes) {
         exigirTipo(principal, "CLIENTE");
         try {
-            clienteService.atualizarPerfil(principal.getCpf(), nome, email);
+            clienteService.atualizarPerfil(principal.getCpf(), nome, telefone, email);
             redirectAttributes.addFlashAttribute("sucesso", "Perfil atualizado com sucesso.");
         } catch (RuntimeException exception) {
-            redirectAttributes.addFlashAttribute("erro", exception.getMessage());
+            redirectAttributes.addFlashAttribute("erro", MensagemErro.extrair(exception));
         }
         return "redirect:/cliente";
     }
@@ -240,7 +240,7 @@ public class WebMvpController {
             clienteService.removerDependente(principal.getCpf(), id);
             redirectAttributes.addFlashAttribute("sucesso", "Dependente removido com sucesso.");
         } catch (RuntimeException exception) {
-            redirectAttributes.addFlashAttribute("erro", exception.getMessage());
+            redirectAttributes.addFlashAttribute("erro", MensagemErro.extrair(exception));
         }
         return "redirect:/cliente";
     }
@@ -252,30 +252,8 @@ public class WebMvpController {
             @PathVariable Integer id,
             RedirectAttributes redirectAttributes) {
         exigirTipo(principal, "CLIENTE");
-        return executarAcao(redirectAttributes, () -> aluguelService.cancelarReserva(id, principal.getCpf()), "/cliente",
-                "Reserva cancelada e estoque liberado.");
-    }
-
-    @PostMapping("/cliente/alugueis/{id}/retirar")
-    @PreAuthorize("hasRole('CLIENTE')")
-    public String retirar(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable Integer id,
-            RedirectAttributes redirectAttributes) {
-        exigirTipo(principal, "CLIENTE");
-        return executarAcao(redirectAttributes, () -> aluguelService.retirarReserva(id, principal.getCpf()), "/cliente",
-                "Retirada registrada. O prazo de devolução é de sete dias.");
-    }
-
-    @PostMapping("/cliente/alugueis/{id}/devolver")
-    @PreAuthorize("hasRole('CLIENTE')")
-    public String devolverCliente(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable Integer id,
-            RedirectAttributes redirectAttributes) {
-        exigirTipo(principal, "CLIENTE");
-        return executarAcao(redirectAttributes, () -> aluguelService.devolver(id, LocalDateTime.now()),
-                "/cliente", "Devolução registrada.");
+        return executarAcao(redirectAttributes, () -> aluguelService.cancelarReserva(id, principal.getCpf()),
+                "/cliente", "Reserva cancelada e estoque liberado.");
     }
 
     @PostMapping("/cliente/alugueis/{id}/renovar")
@@ -286,9 +264,8 @@ public class WebMvpController {
             RedirectAttributes redirectAttributes) {
         exigirTipo(principal, "CLIENTE");
         return executarAcao(redirectAttributes,
-                () -> aluguelService.renovarAluguel(id, principal.getCpf(), LocalDateTime.now()),
-            "/cliente",
-                "Aluguel renovado por mais sete dias.");
+                () -> aluguelService.renovarAluguel(id, principal.getCpf()),
+                "/cliente", "Aluguel renovado por mais sete dias.");
     }
 
     @GetMapping("/gerente")
@@ -299,36 +276,34 @@ public class WebMvpController {
             @RequestParam(required = false) String filtroStatus,
             Model model) {
         exigirTipo(principal, "GERENTE");
-        
-        List<AluguelReserva> prazos = aluguelService.listarPrazosGerenciais();
-        
-        // Aplicar filtros se fornecidos
+
+        List<Aluguel> prazos = aluguelService.listarPrazosGerenciais();
+
         if (filtroCliente != null && !filtroCliente.isBlank()) {
             prazos = prazos.stream()
-                    .filter(a -> a.getCliente().getCpf().equals(filtroCliente) || 
-                               a.getCliente().getNome().toLowerCase().contains(filtroCliente.toLowerCase()))
+                    .filter(a -> a.getCliente().getCpf().equals(filtroCliente)
+                            || a.getCliente().getNome().toLowerCase().contains(filtroCliente.toLowerCase()))
                     .collect(Collectors.toList());
         }
-        
+
         if (filtroStatus != null && !filtroStatus.isBlank()) {
             try {
                 StatusAluguel status = StatusAluguel.valueOf(filtroStatus.toUpperCase());
                 prazos = prazos.stream()
-                        .filter(a -> a.getStatus() == status)
+                        .filter(a -> a.getStatusAluguel() == status)
                         .collect(Collectors.toList());
-            } catch (IllegalArgumentException e) {
-                // Status inválido, ignora filtro
+            } catch (IllegalArgumentException ignored) {
+                // Status inválido, ignora filtro.
             }
         }
-        
+
         model.addAttribute("principal", principal);
         model.addAttribute("jogos", jogoService.listarTodos());
         model.addAttribute("prazos", prazos);
-        model.addAttribute("multas", penalidadeRepository.findByMultaPagaFalse());
-        model.addAttribute("jogoForm", new JogoForm("", "", "", null, null, null, 0));
-        model.addAttribute("alugueisHistorico", aluguelReservaRepository.findByStatusIn(
-                List.of(StatusAluguel.DEVOLVIDO, StatusAluguel.EXPIRADO, StatusAluguel.CANCELADO)
-        ));
+        model.addAttribute("multas", penalidadeRepository.findByStatusPagamento(StatusPagamento.PENDENTE));
+        model.addAttribute("jogoForm", new JogoForm("", "", "", 0, null, null, 0));
+        model.addAttribute("alugueisHistorico", aluguelRepository.findByStatusAluguelIn(
+                List.of(StatusAluguel.FINALIZADO, StatusAluguel.EXPIRADO, StatusAluguel.CANCELADO)));
         model.addAttribute("filtroCliente", filtroCliente != null ? filtroCliente : "");
         model.addAttribute("filtroStatus", filtroStatus != null ? filtroStatus : "");
         return "gerente";
@@ -351,32 +326,44 @@ public class WebMvpController {
             RedirectAttributes redirectAttributes) {
         exigirTipo(principal, "GERENTE");
         return executarAcao(redirectAttributes,
-                () -> jogoService.salvarParaGerente(form.toEntity(), Integer.valueOf(principal.getCpf())),
+                () -> jogoService.salvar(form.toEntity(), form.categoria()),
                 "/gerente", "Jogo cadastrado no catálogo.");
     }
 
-    @PostMapping("/gerente/jogos/{codigo}/atualizar")
+    @PostMapping("/gerente/jogos/{id}/atualizar")
     @PreAuthorize("hasRole('GERENTE')")
     public String atualizarJogo(
             @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable Integer codigo,
+            @PathVariable Integer id,
             @ModelAttribute JogoForm form,
             RedirectAttributes redirectAttributes) {
         exigirTipo(principal, "GERENTE");
         return executarAcao(redirectAttributes,
-                () -> jogoService.atualizar(codigo, form.toEntity(), Integer.valueOf(principal.getCpf())),
+                () -> jogoService.atualizar(id, form.toEntity(), form.categoria()),
                 "/gerente", "Cadastro do jogo atualizado.");
     }
 
-    @PostMapping("/gerente/jogos/{codigo}/remover")
+    @PostMapping("/gerente/jogos/{id}/remover")
     @PreAuthorize("hasRole('GERENTE')")
     public String removerJogo(
             @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable Integer codigo,
+            @PathVariable Integer id,
             RedirectAttributes redirectAttributes) {
         exigirTipo(principal, "GERENTE");
-        return executarAcao(redirectAttributes, () -> jogoService.excluir(codigo),
-                "/gerente", "Jogo removido do catálogo; histórico preservado.");
+        return executarAcao(redirectAttributes, () -> jogoService.excluir(id),
+                "/gerente", "Jogo removido do catálogo.");
+    }
+
+    @PostMapping("/gerente/alugueis/{id}/retirar")
+    @PreAuthorize("hasRole('GERENTE')")
+    public String retirarJogo(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Integer id,
+            RedirectAttributes redirectAttributes) {
+        exigirTipo(principal, "GERENTE");
+        return executarAcao(redirectAttributes,
+                () -> aluguelService.retirarAluguel(id, Integer.valueOf(principal.getCpf())),
+                "/gerente", "Retirada registrada. O prazo de devolução é de sete dias.");
     }
 
     @PostMapping("/gerente/alugueis/{id}/devolver")
@@ -386,7 +373,8 @@ public class WebMvpController {
             @PathVariable Integer id,
             RedirectAttributes redirectAttributes) {
         exigirTipo(principal, "GERENTE");
-        return executarAcao(redirectAttributes, () -> aluguelService.devolver(id, LocalDateTime.now()),
+        return executarAcao(redirectAttributes,
+                () -> aluguelService.finalizarAluguel(id, LocalDate.now()),
                 "/gerente", "Devolução registrada.");
     }
 
@@ -410,7 +398,7 @@ public class WebMvpController {
             acao.run();
             redirectAttributes.addFlashAttribute("sucesso", sucesso);
         } catch (RuntimeException exception) {
-            redirectAttributes.addFlashAttribute("erro", exception.getMessage());
+            redirectAttributes.addFlashAttribute("erro", MensagemErro.extrair(exception));
         }
         return "redirect:" + destino;
     }

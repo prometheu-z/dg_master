@@ -6,7 +6,6 @@ import jakarta.validation.constraints.Pattern;
 
 public record CadastroRequest(
         @NotBlank(message = "CPF obrigatório")
-        @Pattern(regexp = "\\d{11}", message = "CPF deve conter 11 dígitos")
         String cpf,
         @NotBlank(message = "Nome obrigatório")
         String nome,
@@ -17,6 +16,5 @@ public record CadastroRequest(
         @Pattern(regexp = ValidacaoSenha.REGEX, message = ValidacaoSenha.MENSAGEM)
         String senha,
         @NotBlank(message = "Data de nascimento obrigatória")
-        String dataNascimento
-) {
+        String dataNascimento) {
 }

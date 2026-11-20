@@ -17,35 +17,38 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Jogo {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer codigoJogo;
+    @Column(name = "id_jogo")
+    private Integer idJogo;
 
-    @Column(nullable = false, length = 150)
-    private String nome;
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "id_categoria", nullable = false)
+    private Categoria categoria;
 
-    @Column(length = 100)
-    private String categoria;
+    @Column(nullable = false, length = 100)
+    private String titulo;
 
-    @Column(length = 100)
-    private String genero;
+    @Column(columnDefinition = "TEXT")
+    private String descricao;
 
-    private Integer faixaEtariaRecomendada;
+    @Column(name = "faixa_etaria_minima", nullable = false)
+    private Integer faixaEtariaMinima = 0;
 
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal precoLocacao;
+    @Column(name = "valor_diaria", nullable = false, precision = 10, scale = 2)
+    private BigDecimal valorDiaria;
 
-    @Column(nullable = false, precision = 10, scale = 2)
+    @Column(name = "valor_reposicao", nullable = false, precision = 10, scale = 2)
     private BigDecimal valorReposicao;
 
+    @Column(name = "quantidade_estoque", nullable = false)
     private Integer quantidadeEstoque = 0;
-    private boolean statusDisponibilidade = true;
-    private boolean ativoCatalogo = true;
-
-    @ManyToOne
-    @JoinColumn(name = "gerente_id")
-    private Gerente gerente;
 
     @OneToMany(mappedBy = "jogo")
     private List<ItemAluguel> itensAluguel = new ArrayList<>();
+
+    public boolean isDisponivel() {
+        return quantidadeEstoque != null && quantidadeEstoque > 0;
+    }
 }

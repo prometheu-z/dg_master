@@ -5,20 +5,26 @@ services:
     image: mysql:8.0
     container_name: dgmaster-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:?Defina DB_PASSWORD no .env (veja .env.example)}
-      MYSQL_DATABASE: db_master
-      MYSQL_USER: ${DB_USERNAME:-root}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Defina MYSQL_ROOT_PASSWORD no .env (veja .env.example)}
+      MYSQL_DATABASE: dg_master_db
+      MYSQL_USER: dg_app
       MYSQL_PASSWORD: ${DB_PASSWORD:?Defina DB_PASSWORD no .env (veja .env.example)}
+      TZ: America/Sao_Paulo
+    command: ["--default-time-zone=America/Sao_Paulo"]
     ports:
       - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
+      - ./db/01_schema_objetos.sql:/docker-entrypoint-initdb.d/01_schema_objetos.sql:ro
+      - ./db/02_app_permissions.sql:/docker-entrypoint-initdb.d/02_app_permissions.sql:ro
     networks:
       - dgmaster-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
       timeout: 20s
       retries: 10
+      start_period: 30s
 
   app:
     build:
@@ -26,10 +32,11 @@ services:
       dockerfile: Dockerfile
     container_name: dgmaster-app
     environment:
-      DB_URL: jdbc:mysql://mysql:3306/db_master?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-      DGMASTER_ADMIN_KEY: ${DGMASTER_ADMIN_KEY:-}
-      DB_USERNAME: ${DB_USERNAME:-root}
+      DB_URL: jdbc:mysql://mysql:3306/dg_master_db?useSSL=false&serverTimezone=America/Sao_Paulo&allowPublicKeyRetrieval=true
+      DB_USERNAME: dg_app
       DB_PASSWORD: ${DB_PASSWORD:?Defina DB_PASSWORD no .env (veja .env.example)}
+      DGMASTER_ADMIN_KEY: ${DGMASTER_ADMIN_KEY:-}
+      TZ: America/Sao_Paulo
     ports:
       - "8080:8080"
     depends_on:

@@ -1,9 +1,10 @@
 package projeto.bdd2.dgmaster.aluguel.api;
 
-import projeto.bdd2.dgmaster.entity.AluguelReserva;
+import projeto.bdd2.dgmaster.entity.Aluguel;
 import projeto.bdd2.dgmaster.entity.ItemAluguel;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,30 +12,34 @@ import java.util.List;
 public record AluguelResponse(
         Integer idAluguel,
         String status,
-        LocalDateTime dataHoraReserva,
-        LocalDateTime dataLimiteRetirada,
-        LocalDateTime dataLimiteDevolucao,
-        LocalDateTime dataDevolucaoReal,
-        Double valorTotal,
-        BigDecimal creditoAplicado,
-        List<String> jogos,
-                String termosContrato) {
+        LocalDateTime dataReserva,
+        LocalDateTime dataExpiracaoReserva,
+        LocalDateTime dataRetirada,
+        LocalDate devolucaoPrevista,
+        LocalDate devolucaoEfetiva,
+        BigDecimal valorDesconto,
+        BigDecimal valorTotal,
+        Integer qtdRenovacoes,
+        String clienteCpf,
+        List<String> jogos) {
 
-        public static AluguelResponse from(AluguelReserva reserva) {
-                List<String> nomesJogos = new ArrayList<>();
-                for (ItemAluguel item : reserva.getItensAluguel()) {
-                        nomesJogos.add(item.getJogo().getNome());
-                }
-                return new AluguelResponse(
-                                reserva.getIdAluguel(),
-                                reserva.getStatus().name(),
-                                reserva.getDataHoraReserva(),
-                                reserva.getDataLimiteRetirada(),
-                                reserva.getDataLimiteDevolucao(),
-                                reserva.getDataDevolucaoReal(),
-                                reserva.getValorTotal(),
-                                reserva.getCreditoAplicado(),
-                                nomesJogos,
-                                reserva.getTermosContrato());
+    public static AluguelResponse from(Aluguel aluguel) {
+        List<String> nomesJogos = new ArrayList<>();
+        for (ItemAluguel item : aluguel.getItensAluguel()) {
+            nomesJogos.add(item.getJogo().getTitulo());
         }
+        return new AluguelResponse(
+                aluguel.getIdAluguel(),
+                aluguel.getStatusAluguel().name(),
+                aluguel.getDataReserva(),
+                aluguel.getDataExpiracaoReserva(),
+                aluguel.getDataRetirada(),
+                aluguel.getDevolucaoPrevista(),
+                aluguel.getDevolucaoEfetiva(),
+                aluguel.getValorDesconto(),
+                aluguel.getValorTotal(),
+                aluguel.getQtdRenovacoes(),
+                aluguel.getCliente().getCpf(),
+                nomesJogos);
+    }
 }

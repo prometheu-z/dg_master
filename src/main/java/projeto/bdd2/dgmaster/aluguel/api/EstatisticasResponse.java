@@ -20,21 +20,22 @@ public class EstatisticasResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class JogoEstatistica {
-        private Integer codigoJogo;
-        private String nome;
-        private String categoria;
-        private Long totalAlugueis;
+        private Integer idJogo;
+        private String titulo;
+        private String nomeCategoria;
+        private Long totalLocacoes;
+        private Long unidadesAlugadas;
     }
 
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
     public static class JogoRentabilidade {
-        private Integer codigoJogo;
-        private String nome;
-        private String categoria;
+        private Integer idJogo;
+        private String titulo;
+        private String nomeCategoria;
         private BigDecimal receitaTotal;
-        private Long totalAlugueis;
+        private Long totalLocacoes;
         private BigDecimal receitaMediaPorAluguel;
     }
 }

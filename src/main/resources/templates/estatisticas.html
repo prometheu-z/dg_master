@@ -40,12 +40,12 @@
             <article class="admin-game" th:each="jogo : ${estatisticas.jogosMaisAlugados}">
                 <div class="admin-game-heading">
                     <div>
-                        <h3 th:text="${jogo.nome}"></h3>
-                        <span class="muted" th:text="${jogo.categoria}"></span>
+                        <h3 th:text="${jogo.titulo}"></h3>
+                        <span class="muted" th:text="${jogo.nomeCategoria}"></span>
                     </div>
                     <div class="metric-strip">
                         <div>
-                            <strong th:text="${jogo.totalAlugueis}"></strong>
+                            <strong th:text="${jogo.totalLocacoes}"></strong>
                             <span>aluguéis</span>
                         </div>
                     </div>
@@ -67,12 +67,12 @@
             <article class="admin-game" th:each="jogo : ${estatisticas.jogosMenosAlugados}">
                 <div class="admin-game-heading">
                     <div>
-                        <h3 th:text="${jogo.nome}"></h3>
-                        <span class="muted" th:text="${jogo.categoria}"></span>
+                        <h3 th:text="${jogo.titulo}"></h3>
+                        <span class="muted" th:text="${jogo.nomeCategoria}"></span>
                     </div>
                     <div class="metric-strip">
                         <div>
-                            <strong th:text="${jogo.totalAlugueis}"></strong>
+                            <strong th:text="${jogo.totalLocacoes}"></strong>
                             <span>aluguéis</span>
                         </div>
                     </div>
@@ -94,8 +94,8 @@
             <article class="admin-game" th:each="jogo : ${estatisticas.jogosMaisRentaveis}">
                 <div class="admin-game-heading">
                     <div>
-                        <h3 th:text="${jogo.nome}"></h3>
-                        <span class="muted" th:text="${jogo.categoria}"></span>
+                        <h3 th:text="${jogo.titulo}"></h3>
+                        <span class="muted" th:text="${jogo.nomeCategoria}"></span>
                     </div>
                     <div class="metric-strip">
                         <div>
@@ -103,7 +103,7 @@
                             <span>receita total</span>
                         </div>
                         <div>
-                            <strong th:text="${jogo.totalAlugueis}"></strong>
+                            <strong th:text="${jogo.totalLocacoes}"></strong>
                             <span>aluguéis</span>
                         </div>
                         <div>
@@ -129,8 +129,8 @@
             <article class="admin-game" th:each="jogo : ${estatisticas.jogosMenosRentaveis}">
                 <div class="admin-game-heading">
                     <div>
-                        <h3 th:text="${jogo.nome}"></h3>
-                        <span class="muted" th:text="${jogo.categoria}"></span>
+                        <h3 th:text="${jogo.titulo}"></h3>
+                        <span class="muted" th:text="${jogo.nomeCategoria}"></span>
                     </div>
                     <div class="metric-strip">
                         <div>
@@ -138,7 +138,7 @@
                             <span>receita total</span>
                         </div>
                         <div>
-                            <strong th:text="${jogo.totalAlugueis}"></strong>
+                            <strong th:text="${jogo.totalLocacoes}"></strong>
                             <span>aluguéis</span>
                         </div>
                         <div>

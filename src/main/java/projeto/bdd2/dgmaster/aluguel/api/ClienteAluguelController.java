@@ -6,8 +6,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import projeto.bdd2.dgmaster.entity.AluguelReserva;
-import projeto.bdd2.dgmaster.repository.AluguelReservaRepository;
+import projeto.bdd2.dgmaster.entity.Aluguel;
+import projeto.bdd2.dgmaster.repository.AluguelRepository;
 import projeto.bdd2.dgmaster.security.UserPrincipal;
 
 import java.util.ArrayList;
@@ -17,10 +17,10 @@ import java.util.List;
 @RequestMapping("/api/clientes")
 public class ClienteAluguelController {
 
-    private final AluguelReservaRepository aluguelReservaRepository;
+    private final AluguelRepository aluguelRepository;
 
-    public ClienteAluguelController(AluguelReservaRepository aluguelReservaRepository) {
-        this.aluguelReservaRepository = aluguelReservaRepository;
+    public ClienteAluguelController(AluguelRepository aluguelRepository) {
+        this.aluguelRepository = aluguelRepository;
     }
 
     @GetMapping("/{cpf}/alugueis")
@@ -31,8 +31,8 @@ public class ClienteAluguelController {
             throw new AccessDeniedException("Clientes só podem consultar o próprio histórico");
         }
         List<AluguelResponse> respostas = new ArrayList<>();
-        for (AluguelReserva reserva : aluguelReservaRepository.findByClienteCpf(cpf)) {
-            respostas.add(AluguelResponse.from(reserva));
+        for (Aluguel aluguel : aluguelRepository.findByClienteCpf(cpf)) {
+            respostas.add(AluguelResponse.from(aluguel));
         }
         return respostas;
     }

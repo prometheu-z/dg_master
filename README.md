@@ -26,21 +26,45 @@ Sistema web completo para aluguel de jogos de tabuleiro com retirada física na 
 Crie um arquivo `.env` na raiz do projeto (baseado no `.env.example`):
 
 ```bash
-cp .env.example .env
+Copy-Item .env.example .env
 ```
 
 Edite o arquivo `.env` com suas credenciais:
 
 ```env
-DB_URL=jdbc:mysql://localhost:3306/db_master?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+DB_URL=jdbc:mysql://localhost:3306/dg_master_db?useSSL=false&serverTimezone=America/Sao_Paulo&allowPublicKeyRetrieval=true
 DB_USERNAME=root
 DB_PASSWORD=sua_senha_aqui
 DGMASTER_ADMIN_KEY=uma_chave_secreta
 ```
 
-> `DB_PASSWORD` é obrigatório (não há valor padrão no repositório). A variável
-> `DGMASTER_ADMIN_KEY` é a chave exigida para criar contas de Gerente: sem ela, o
-> cadastro de gerentes fica desabilitado.
+O IntelliJ não carrega `.env` automaticamente. Para execução pela IDE, configure
+`DB_PASSWORD` em **Run > Edit Configurations > Environment variables** se o seu
+usuário MySQL tiver senha. `DGMASTER_ADMIN_KEY` protege o cadastro de gerentes;
+sem ela, esse cadastro fica desabilitado.
+
+### Criar o banco local pela primeira vez
+
+1. Inicie o serviço MySQL local e abra `db/01_schema_objetos.sql` no MySQL Workbench.
+2. Execute o script para criar `dg_master_db`, tabelas, rotinas, triggers e views.
+3. Rode `DgmasterApplication` pelo IntelliJ.
+
+> **Atenção:** `db/01_schema_objetos.sql` apaga e recria `dg_master_db`. Execute-o
+> apenas na primeira configuração ou quando puder descartar os dados existentes.
+> A aplicação não cria o schema automaticamente; o Hibernate apenas valida as
+> tabelas depois da conexão. Para IntelliJ local, conecte com seu usuário MySQL
+> (por padrão `root`); `db/02_app_permissions.sql` é usado somente pelo Docker.
+
+Se já criou o schema e recebeu erros de validação porque o banco tem colunas
+`TINYINT UNSIGNED` mapeadas como `Integer`, execute no Workbench:
+
+```sql
+ALTER TABLE aluguel
+  MODIFY COLUMN qtd_renovacoes INT NOT NULL DEFAULT 0;
+
+ALTER TABLE jogo
+  MODIFY COLUMN faixa_etaria_minima INT NOT NULL DEFAULT 0;
+```
 
 ## 🐳 Docker (Recomendado)
 
@@ -68,26 +92,21 @@ docker-compose down
 docker-compose down -v
 ```
 
-## 💻 Execução Local
-
-### 1. Subir o MySQL (se não estiver usando Docker)
-
-```bash
-# Usando Docker
-docker run --name dgmaster-mysql -e MYSQL_ROOT_PASSWORD=sua_senha -e MYSQL_DATABASE=db_master -p 3306:3306 -d mysql:8.0
-```
-
-### 2. Compilar e executar
+## 💻 Execução Local pelo IntelliJ
 
 ```bash
 # Windows
-./mvnw.cmd clean spring-boot:run
+.\mvnw.cmd spring-boot:run
 
 # Linux/Mac
-./mvnw clean spring-boot:run
+./mvnw spring-boot:run
 ```
 
-### 3. Acessar a aplicação
+Antes de executar, confirme que o serviço MySQL está iniciado e que o script
+`db/01_schema_objetos.sql` já foi executado. Também é possível iniciar a aplicação
+pela configuração `DgmasterApplication` no IntelliJ.
+
+### Acessar a aplicação
 
 - **Aplicação**: http://localhost:8080
 - **Swagger UI**: http://localhost:8080/swagger-ui.html

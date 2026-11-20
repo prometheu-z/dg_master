@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -15,22 +16,26 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Penalidade {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_penalidade")
     private Integer idPenalidade;
 
-    @Column(nullable = false, length = 50)
-    private String tipoPenalidade;
-
-    @Column(nullable = false)
-    private Double valorMulta;
-
-    @Column(name = "multa_paga", nullable = false, columnDefinition = "BOOLEAN NOT NULL DEFAULT FALSE")
-    private boolean multaPaga;
-
-    private LocalDateTime dataFimSuspensao;
-
     @ManyToOne(optional = false)
-    @JoinColumn(name = "aluguel_id", nullable = false)
-    private AluguelReserva aluguelReserva;
+    @JoinColumn(name = "id_aluguel", nullable = false)
+    private Aluguel aluguel;
+
+    @Column(name = "motivo_penalidade", nullable = false, length = 100)
+    private String motivoPenalidade;
+
+    @Column(name = "valor_multa", nullable = false, precision = 10, scale = 2)
+    private BigDecimal valorMulta;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status_pagamento", nullable = false, length = 10)
+    private StatusPagamento statusPagamento = StatusPagamento.PENDENTE;
+
+    @Column(name = "data_geracao", insertable = false, updatable = false)
+    private LocalDateTime dataGeracao;
 }

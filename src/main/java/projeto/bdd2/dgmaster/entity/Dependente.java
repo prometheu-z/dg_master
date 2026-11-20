@@ -15,17 +15,22 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Dependente {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_dependente")
     private Integer idDependente;
 
-    @Column(nullable = false, length = 150)
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "id_cliente", nullable = false)
+    private Cliente cliente;
+
+    @Column(nullable = false, length = 100)
     private String nome;
 
     @Column(name = "data_nascimento", nullable = false)
     private LocalDate dataNascimento;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "cliente_cpf", nullable = false)
-    private Cliente cliente;
+    @Column(name = "grau_parentesco", nullable = false, length = 30)
+    private String grauParentesco;
 }

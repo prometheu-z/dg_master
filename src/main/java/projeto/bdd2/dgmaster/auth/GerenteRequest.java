@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
 
 public record GerenteRequest(
         @NotBlank(message = "Nome é obrigatório")
-        @Size(min = 3, max = 150, message = "Nome deve ter entre 3 e 150 caracteres")
+        @Size(min = 3, max = 100, message = "Nome deve ter entre 3 e 100 caracteres")
         String nome,
 
         @NotBlank(message = "E-mail é obrigatório")
@@ -18,9 +18,10 @@ public record GerenteRequest(
         @Pattern(regexp = ValidacaoSenha.REGEX, message = ValidacaoSenha.MENSAGEM)
         String senha,
 
+        @NotBlank(message = "Matrícula é obrigatória")
+        @Size(max = 20, message = "Matrícula deve ter no máximo 20 caracteres")
+        String matricula,
+
         // Chave de administrador exigida para criação de gerentes.
-        // Não é validada por Bean Validation: é conferida contra a configuração
-        // (dgmaster.admin.chave-cadastro-gerente / DGMASTER_ADMIN_KEY).
-        String chaveAdmin
-) {
+        String chaveAdmin) {
 }

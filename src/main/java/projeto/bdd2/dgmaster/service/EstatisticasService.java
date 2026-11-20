@@ -1,63 +1,79 @@
 package projeto.bdd2.dgmaster.service;
 
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import projeto.bdd2.dgmaster.aluguel.api.EstatisticasResponse;
-import projeto.bdd2.dgmaster.repository.EstatisticaRentabilidadeProjection;
-import projeto.bdd2.dgmaster.repository.JogoRepository;
+import projeto.bdd2.dgmaster.repository.EstatisticaJogoProjection;
+import projeto.bdd2.dgmaster.repository.RelatorioRepository;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * RF10 / VIEW-01: os relatórios são calculados diretamente pelas views
+ * relacionais {@code vw_jogos_mais_alugados} e derivados, sem reagregação
+ * pesada na aplicação.
+ */
 @Service
 public class EstatisticasService {
 
-    private final JogoRepository jogoRepository;
+    private final RelatorioRepository relatorioRepository;
 
-    public EstatisticasService(JogoRepository jogoRepository) {
-        this.jogoRepository = jogoRepository;
+    public EstatisticasService(RelatorioRepository relatorioRepository) {
+        this.relatorioRepository = relatorioRepository;
     }
 
+    @Transactional(readOnly = true)
     public EstatisticasResponse gerarEstatisticasCompletas() {
-        Pageable top10 = PageRequest.of(0, 10);
+        List<EstatisticasResponse.JogoEstatistica> maisAlugados =
+                relatorioRepository.jogosMaisAlugados().stream()
+                        .map(this::mapearEstatistica)
+                        .collect(Collectors.toList());
 
-        List<EstatisticasResponse.JogoEstatistica> maisAlugados = jogoRepository.findJogosMaisAlugados(top10).stream()
-                .map(p -> new EstatisticasResponse.JogoEstatistica(p.getCodigoJogo(), p.getNome(), p.getCategoria(), p.getTotalAlugueis()))
-                .collect(Collectors.toList());
+        List<EstatisticasResponse.JogoEstatistica> menosAlugados =
+                relatorioRepository.jogosMenosAlugados().stream()
+                        .map(this::mapearEstatistica)
+                        .collect(Collectors.toList());
 
-        List<EstatisticasResponse.JogoEstatistica> menosAlugados = jogoRepository.findJogosMenosAlugados(top10).stream()
-                .map(p -> new EstatisticasResponse.JogoEstatistica(p.getCodigoJogo(), p.getNome(), p.getCategoria(), p.getTotalAlugueis()))
-                .collect(Collectors.toList());
+        List<EstatisticasResponse.JogoRentabilidade> maisRentaveis =
+                relatorioRepository.jogosMaisRentaveis().stream()
+                        .map(this::mapearRentabilidade)
+                        .collect(Collectors.toList());
 
-        List<EstatisticasResponse.JogoRentabilidade> maisRentaveis = jogoRepository.findJogosMaisRentaveis(top10).stream()
-                .map(this::mapearParaRentabilidade)
-                .collect(Collectors.toList());
-
-        List<EstatisticasResponse.JogoRentabilidade> menosRentaveis = jogoRepository.findJogosMenosRentaveis(top10).stream()
-                .map(this::mapearParaRentabilidade)
-                .collect(Collectors.toList());
+        List<EstatisticasResponse.JogoRentabilidade> menosRentaveis =
+                relatorioRepository.jogosMenosRentaveis().stream()
+                        .map(this::mapearRentabilidade)
+                        .collect(Collectors.toList());
 
         return new EstatisticasResponse(maisAlugados, menosAlugados, maisRentaveis, menosRentaveis);
     }
 
-    // Método auxiliar para evitar repetição de código no cálculo da média
-    private EstatisticasResponse.JogoRentabilidade mapearParaRentabilidade(EstatisticaRentabilidadeProjection p) {
-        BigDecimal receitaTotal = p.getReceitaTotal() == null ? BigDecimal.ZERO : p.getReceitaTotal();
-        long totalAlugueis = p.getTotalAlugueis() == null ? 0 : p.getTotalAlugueis();
-        BigDecimal receitaMedia = totalAlugueis > 0
-                ? receitaTotal.divide(BigDecimal.valueOf(totalAlugueis), 2, RoundingMode.HALF_UP)
+    private EstatisticasResponse.JogoEstatistica mapearEstatistica(EstatisticaJogoProjection projection) {
+        return new EstatisticasResponse.JogoEstatistica(
+                projection.getIdJogo(),
+                projection.getTitulo(),
+                projection.getNomeCategoria(),
+                projection.getTotalLocacoes() == null ? 0L : projection.getTotalLocacoes(),
+                projection.getUnidadesAlugadas() == null ? 0L : projection.getUnidadesAlugadas());
+    }
+
+    private EstatisticasResponse.JogoRentabilidade mapearRentabilidade(EstatisticaJogoProjection projection) {
+        BigDecimal receitaTotal = projection.getReceitaBrutaGerada() == null
+                ? BigDecimal.ZERO
+                : projection.getReceitaBrutaGerada();
+        long totalLocacoes = projection.getTotalLocacoes() == null ? 0L : projection.getTotalLocacoes();
+        BigDecimal receitaMedia = totalLocacoes > 0
+                ? receitaTotal.divide(BigDecimal.valueOf(totalLocacoes), 2, RoundingMode.HALF_UP)
                 : BigDecimal.ZERO;
 
         return new EstatisticasResponse.JogoRentabilidade(
-                p.getCodigoJogo(),
-                p.getNome(),
-                p.getCategoria(),
+                projection.getIdJogo(),
+                projection.getTitulo(),
+                projection.getNomeCategoria(),
                 receitaTotal,
-                totalAlugueis,
-                receitaMedia
-        );
+                totalLocacoes,
+                receitaMedia);
     }
 }

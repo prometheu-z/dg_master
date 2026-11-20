@@ -6,12 +6,15 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Mapeamento fiel da tabela {@code cliente} do script físico (RFC-003 / JPA-01).
+ * A PK é {@code id_cliente}; o CPF é uma coluna única de 11 dígitos.
+ */
 @Entity
 @Table(name = "cliente")
 @Getter
@@ -19,15 +22,20 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Cliente {
-    @Id
-    @Column(length = 11, nullable = false, updatable = false)
-    private String cpf;
 
-    @Column(nullable = false, length = 150)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_cliente")
+    private Integer idCliente;
+
+    @Column(nullable = false, length = 100)
     private String nome;
 
-    @Column(nullable = false, unique = true, length = 150)
-    private String email;
+    @Column(nullable = false, unique = true, length = 11, columnDefinition = "CHAR(11)")
+    private String cpf;
+
+    @Column(length = 20)
+    private String telefone;
 
     @Column(nullable = false, length = 255)
     private String senha;
@@ -35,18 +43,15 @@ public class Cliente {
     @Column(name = "data_nascimento", nullable = false)
     private LocalDate dataNascimento;
 
-    @Column(name = "status_conta", nullable = false)
-    private boolean statusConta = true;
+    @Column(nullable = false, unique = true, length = 254)
+    private String email;
 
-        @Column(name = "credito_carteira", nullable = false, precision = 10, scale = 2,
-            columnDefinition = "DECIMAL(10,2) NOT NULL DEFAULT 0.00")
-        private BigDecimal creditoCarteira = BigDecimal.ZERO;
-
-        private LocalDateTime dataFimSuspensao;
+    @Column(name = "data_cadastro", insertable = false, updatable = false)
+    private LocalDateTime dataCadastro;
 
     @OneToMany(mappedBy = "cliente")
     private List<Dependente> dependentes = new ArrayList<>();
 
     @OneToMany(mappedBy = "cliente")
-    private List<AluguelReserva> alugueis = new ArrayList<>();
+    private List<Aluguel> alugueis = new ArrayList<>();
 }

@@ -5,5 +5,8 @@ import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
 
-public record DependenteRequest(@NotBlank String nome, @NotNull LocalDate dataNascimento) {
+public record DependenteRequest(
+        @NotBlank String nome,
+        @NotNull LocalDate dataNascimento,
+        String grauParentesco) {
 }

@@ -45,15 +45,6 @@
                     <option value="Cartas" th:selected="${categoria == 'Cartas'}">Cartas</option>
                 </select>
             </label>
-            <label>Gênero
-                <select name="genero" th:value="${genero}" style="cursor: pointer;">
-                    <option value="">Todos</option>
-                    <option value="Aventura" th:selected="${genero == 'Aventura'}">Aventura</option>
-                    <option value="Cooperativo" th:selected="${genero == 'Cooperativo'}">Cooperativo</option>
-                    <option value="Cartas" th:selected="${genero == 'Cartas'}">Cartas</option>
-                    <option value="Estrategia" th:selected="${genero == 'Estrategia'}">Estratégia</option>
-                </select>
-            </label>
             <label>Idade maxima
                 <input name="faixaEtaria" type="number" min="0" th:value="${faixaEtaria}" placeholder="Qualquer idade">
             </label>
@@ -76,36 +67,36 @@
         </div>
         <div class="game-list" th:if="${!#lists.isEmpty(jogos)}">
             <article class="game-row" th:each="jogo, iter : ${jogos}">
-                <label class="game-select" th:for="${'game-' + jogo.codigoJogo}">
-                    <input type="checkbox" name="idsJogos" th:id="${'game-' + jogo.codigoJogo}" th:value="${jogo.codigoJogo}">
+                <label class="game-select" th:for="${'game-' + jogo.idJogo}">
+                    <input type="checkbox" name="idsJogos" th:id="${'game-' + jogo.idJogo}" th:value="${jogo.idJogo}">
                     <span class="checkmark"></span>
                 </label>
                 <span class="game-number" th:text="${#numbers.formatInteger(iter.count, 2)}"></span>
                 <div class="game-cover-placeholder" aria-label="Capa do jogo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3" ry="3"/><path d="M3 9h18"/></svg></div>
                 <div class="game-main">
-                    <h2><a th:href="@{'/catalogo/' + ${jogo.codigoJogo}}" th:text="${jogo.nome}"></a></h2>
-                    <p><span th:text="${jogo.categoria}"></span><span class="meta-separator">/</span><span th:text="${jogo.genero}"></span></p>
+                    <h2><a th:href="@{'/catalogo/' + ${jogo.idJogo}}" th:text="${jogo.titulo}"></a></h2>
+                    <p><span th:text="${jogo.categoria.nomeCategoria}"></span></p>
                 </div>
-                <div class="game-age" th:if="${jogo.faixaEtariaRecomendada != null}"><span>LIVRE A PARTIR DE</span><strong th:text="${jogo.faixaEtariaRecomendada} + '+'"></strong></div>
-                <div class="game-stock"><span th:class="${jogo.statusDisponibilidade ? 'stock-dot available' : 'stock-dot'}"></span><span th:text="${jogo.statusDisponibilidade ? 'Disponivel' : 'Indisponivel'}"></span></div>
-                <strong class="game-price" th:text="${'R$ ' + #numbers.formatDecimal(jogo.precoLocacao, 1, 'POINT', 2, 'COMMA')}"></strong>
+                <div class="game-age" th:if="${jogo.faixaEtariaMinima != null}"><span>LIVRE A PARTIR DE</span><strong th:text="${jogo.faixaEtariaMinima} + '+'"></strong></div>
+                <div class="game-stock"><span th:class="${jogo.quantidadeEstoque > 0 ? 'stock-dot available' : 'stock-dot'}"></span><span th:text="${jogo.quantidadeEstoque > 0 ? 'Disponivel' : 'Indisponivel'}"></span></div>
+                <strong class="game-price" th:text="${'R$ ' + #numbers.formatDecimal(jogo.valorDiaria, 1, 'POINT', 2, 'COMMA')}"></strong>
             </article>
         </div>
-        <div class="empty-state" th:if="${#lists.isEmpty(jogos)}"><span class="empty-mark">—</span><h2>Nenhum jogo encontrado</h2><p>Tente remover um filtro ou buscar por outro genero.</p></div>
+        <div class="empty-state" th:if="${#lists.isEmpty(jogos)}"><span class="empty-mark">—</span><h2>Nenhum jogo encontrado</h2><p>Tente remover um filtro ou buscar por outra categoria.</p></div>
     </form>
 
     <div th:unless="${cliente}" class="game-list public-game-list" th:if="${!#lists.isEmpty(jogos)}">
         <article class="game-row" th:each="jogo, iter : ${jogos}">
             <span class="game-number" th:text="${#numbers.formatInteger(iter.count, 2)}"></span>
             <div class="game-cover-placeholder" aria-label="Capa do jogo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3" ry="3"/><path d="M3 9h18"/></svg></div>
-            <div class="game-main"><h2><a th:href="@{'/catalogo/' + ${jogo.codigoJogo}}" th:text="${jogo.nome}"></a></h2><p><span th:text="${jogo.categoria}"></span><span class="meta-separator">/</span><span th:text="${jogo.genero}"></span></p></div>
-            <div class="game-age" th:if="${jogo.faixaEtariaRecomendada != null}"><span>IDADE</span><strong th:text="${jogo.faixaEtariaRecomendada} + '+'"></strong></div>
-            <div class="game-stock"><span th:class="${jogo.statusDisponibilidade ? 'stock-dot available' : 'stock-dot'}"></span><span th:text="${jogo.statusDisponibilidade ? 'Disponivel' : 'Indisponivel'}"></span></div>
-            <strong class="game-price" th:text="${'R$ ' + #numbers.formatDecimal(jogo.precoLocacao, 1, 'POINT', 2, 'COMMA')}"></strong>
+            <div class="game-main"><h2><a th:href="@{'/catalogo/' + ${jogo.idJogo}}" th:text="${jogo.titulo}"></a></h2><p><span th:text="${jogo.categoria.nomeCategoria}"></span></p></div>
+            <div class="game-age" th:if="${jogo.faixaEtariaMinima != null}"><span>IDADE</span><strong th:text="${jogo.faixaEtariaMinima} + '+'"></strong></div>
+            <div class="game-stock"><span th:class="${jogo.quantidadeEstoque > 0 ? 'stock-dot available' : 'stock-dot'}"></span><span th:text="${jogo.quantidadeEstoque > 0 ? 'Disponivel' : 'Indisponivel'}"></span></div>
+            <strong class="game-price" th:text="${'R$ ' + #numbers.formatDecimal(jogo.valorDiaria, 1, 'POINT', 2, 'COMMA')}"></strong>
         </article>
         <div class="visitor-cta"><span>Pronto para reservar?</span><a th:href="@{/login}">Entre na sua conta <span aria-hidden="true">→</span></a></div>
     </div>
-    <div class="empty-state" th:if="${!cliente and #lists.isEmpty(jogos)}"><span class="empty-mark">—</span><h2>Nenhum jogo encontrado</h2><p>Tente remover um filtro ou buscar por outro genero.</p></div>
+    <div class="empty-state" th:if="${!cliente and #lists.isEmpty(jogos)}"><span class="empty-mark">—</span><h2>Nenhum jogo encontrado</h2><p>Tente remover um filtro ou buscar por outra categoria.</p></div>
     <section class="how-it-works" style="margin-top:60px; padding-top:40px; border-top:2px solid var(--line);">
         <h2 style="font-family:Georgia, serif; font-size:28px; margin-bottom:28px;">Como funciona</h2>
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:28px;">

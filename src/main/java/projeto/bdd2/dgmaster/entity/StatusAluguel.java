@@ -1,3 +1,13 @@
 package projeto.bdd2.dgmaster.entity;
 
-public enum StatusAluguel { RESERVADO, RETIRADO, DEVOLVIDO, ATRASADO, EXPIRADO, CANCELADO }
+/**
+ * Máquina de estados oficial do banco (trg_aluguel_estados_bu):
+ * RESERVADO -> RETIRADO | CANCELADO | EXPIRADO ; RETIRADO -> FINALIZADO.
+ */
+public enum StatusAluguel {
+    RESERVADO,
+    RETIRADO,
+    FINALIZADO,
+    EXPIRADO,
+    CANCELADO
+}

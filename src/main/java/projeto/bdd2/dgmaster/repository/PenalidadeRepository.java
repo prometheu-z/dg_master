@@ -2,13 +2,13 @@ package projeto.bdd2.dgmaster.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import projeto.bdd2.dgmaster.entity.Penalidade;
+import projeto.bdd2.dgmaster.entity.StatusPagamento;
+
 import java.util.List;
+import java.util.Optional;
 
 public interface PenalidadeRepository extends JpaRepository<Penalidade, Integer> {
-    List<Penalidade> findByAluguelReservaIdAluguel(Integer idAluguel);
-    List<Penalidade> findByMultaPagaFalse();
-    java.util.Optional<Penalidade> findByAluguelReservaIdAluguelAndTipoPenalidade(Integer idAluguel, String tipoPenalidade);
-
-    @org.springframework.data.jpa.repository.Query("select count(p) > 0 from Penalidade p where p.aluguelReserva.cliente.cpf = :cpf and p.multaPaga = false")
-    boolean existsMultaNaoPagaPorCliente(@org.springframework.data.repository.query.Param("cpf") String cpf);
+    List<Penalidade> findByAluguelIdAluguel(Integer idAluguel);
+    List<Penalidade> findByStatusPagamento(StatusPagamento statusPagamento);
+    Optional<Penalidade> findByAluguelIdAluguelAndMotivoPenalidade(Integer idAluguel, String motivoPenalidade);
 }

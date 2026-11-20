@@ -18,7 +18,7 @@
     <div class="notice notice-error" th:if="${erro}" th:text="${erro}"></div>
     <section class="dashboard-heading">
         <div><p class="eyebrow">AREA DO CLIENTE</p><h1>Ola, <em th:text="${cliente.nome}"></em></h1><p class="intro-copy">Acompanhe seus jogos e os perfis da sua familia.</p></div>
-        <div class="wallet"><span>CREDITO EM CARTEIRA</span><strong th:text="${'R$ ' + #numbers.formatDecimal(cliente.creditoCarteira, 1, 'POINT', 2, 'COMMA')}"></strong></div>
+        <div class="wallet"><span>CPF CADASTRADO</span><strong th:text="${cliente.cpf}"></strong></div>
     </section>
     
     <section class="section-block">
@@ -35,27 +35,24 @@
             <button class="button button-dark button-small" type="submit">Atualizar perfil</button>
         </form>
     </section>
-    <div class="account-alert" th:if="${!cliente.statusConta}"><strong>Conta suspensa</strong><span>Consulte o gerente para verificar multas e prazo de reativacao.</span></div>
 
     <section class="section-block">
         <div class="section-title"><div><p class="eyebrow">SEUS ALUGUEIS</p><h2>Reservas e jogos retirados</h2></div><span class="section-count" th:text="${#lists.size(alugueisAtivos)} + ' ativos'"></span></div>
         <div class="rental-list" th:if="${!#lists.isEmpty(alugueisAtivos)}">
             <article class="rental-row" th:each="aluguel : ${alugueisAtivos}">
                 <div class="rental-head">
-                    <div><span class="rental-id" th:text="${'RESERVA #' + aluguel.idAluguel}"></span><h3 th:text="${aluguel.dependente == null ? 'Titular' : aluguel.dependente.nome}"></h3></div>
-                    <span class="status-pill" th:classappend="${' status-' + #strings.toLowerCase(aluguel.status.name())}" th:text="${aluguel.status}"></span>
+                    <div><span class="rental-id" th:text="${'RESERVA #' + aluguel.idAluguel}"></span><h3 th:text="${aluguel.dependentes.isEmpty() ? 'Titular' : aluguel.dependentes.iterator().next().nome}"></h3></div>
+                    <span class="status-pill" th:classappend="${' status-' + #strings.toLowerCase(aluguel.statusAluguel.name())}" th:text="${aluguel.statusAluguel}"></span>
                 </div>
-                <div class="rental-games"><span th:each="item : ${aluguel.itensAluguel}" class="rental-game"><span th:text="${item.jogo.nome}"></span><small th:text="${'R$ ' + #numbers.formatDecimal(item.valorUnitarioCobrado, 1, 'POINT', 2, 'COMMA')}"></small></span></div>
+                <div class="rental-games"><span th:each="item : ${aluguel.itensAluguel}" class="rental-game"><span th:text="${item.jogo.titulo}"></span><small th:text="${'R$ ' + #numbers.formatDecimal(item.valorCobrado, 1, 'POINT', 2, 'COMMA')}"></small></span></div>
                 <div class="rental-meta">
-                    <span th:if="${aluguel.dataLimiteRetirada != null}">Retirar ate <strong th:text="${T(projeto.bdd2.dgmaster.util.DataFormatter).formatar(aluguel.dataLimiteRetirada)}"></strong></span>
-                    <span th:if="${aluguel.dataLimiteDevolucao != null}">Devolver ate <strong th:text="${T(projeto.bdd2.dgmaster.util.DataFormatter).formatar(aluguel.dataLimiteDevolucao)}"></strong></span>
+                    <span th:if="${aluguel.statusAluguel.name() == 'RESERVADO' and aluguel.dataExpiracaoReserva != null}">Retirar ate <strong th:text="${T(projeto.bdd2.dgmaster.util.DataFormatter).formatar(aluguel.dataExpiracaoReserva)}"></strong></span>
+                    <span th:if="${aluguel.statusAluguel.name() == 'RETIRADO' and aluguel.devolucaoPrevista != null}">Devolver ate <strong th:text="${T(projeto.bdd2.dgmaster.util.DataFormatter).formatar(aluguel.devolucaoPrevista)}"></strong></span>
                     <span>Total <strong th:text="${'R$ ' + #numbers.formatDecimal(aluguel.valorTotal, 1, 'POINT', 2, 'COMMA')}"></strong></span>
                 </div>
                 <div class="rental-actions">
-                    <form th:if="${aluguel.status.name() == 'RESERVADO'}" th:action="@{'/cliente/alugueis/' + ${aluguel.idAluguel} + '/retirar'}" method="post"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button class="button button-primary button-small" type="submit">Registrar retirada</button></form>
-                    <form th:if="${aluguel.status.name() == 'RESERVADO'}" th:action="@{'/cliente/alugueis/' + ${aluguel.idAluguel} + '/cancelar'}" method="post"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button class="button button-outline button-small" type="submit">Cancelar</button></form>
-                    <form th:if="${aluguel.status.name() == 'RETIRADO' and aluguel.quantidadeRenovacoes == 0}" th:action="@{'/cliente/alugueis/' + ${aluguel.idAluguel} + '/renovar'}" method="post"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button class="button button-outline button-small" type="submit">Renovar por 7 dias</button></form>
-                    <form th:if="${aluguel.status.name() == 'RETIRADO'}" th:action="@{'/cliente/alugueis/' + ${aluguel.idAluguel} + '/devolver'}" method="post"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button class="button button-primary button-small" type="submit">Devolver</button></form>
+                    <form th:if="${aluguel.statusAluguel.name() == 'RESERVADO'}" th:action="@{'/cliente/alugueis/' + ${aluguel.idAluguel} + '/cancelar'}" method="post"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button class="button button-outline button-small" type="submit">Cancelar</button></form>
+                    <form th:if="${aluguel.statusAluguel.name() == 'RETIRADO' and aluguel.qtdRenovacoes == 0}" th:action="@{'/cliente/alugueis/' + ${aluguel.idAluguel} + '/renovar'}" method="post"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"><button class="button button-outline button-small" type="submit">Renovar por 7 dias</button></form>
                 </div>
             </article>
         </div>
@@ -67,14 +64,14 @@
         <div class="rental-list" th:if="${!#lists.isEmpty(alugueisHistorico)}">
             <article class="rental-row" th:each="aluguel : ${alugueisHistorico}">
                 <div class="rental-head">
-                    <div><span class="rental-id" th:text="${'RESERVA #' + aluguel.idAluguel}"></span><h3 th:text="${aluguel.dependente == null ? 'Titular' : aluguel.dependente.nome}"></h3></div>
-                    <span class="status-pill" th:classappend="${' status-' + #strings.toLowerCase(aluguel.status.name())}" th:text="${aluguel.status}"></span>
+                    <div><span class="rental-id" th:text="${'RESERVA #' + aluguel.idAluguel}"></span><h3 th:text="${aluguel.dependentes.isEmpty() ? 'Titular' : aluguel.dependentes.iterator().next().nome}"></h3></div>
+                    <span class="status-pill" th:classappend="${' status-' + #strings.toLowerCase(aluguel.statusAluguel.name())}" th:text="${aluguel.statusAluguel}"></span>
                 </div>
-                <div class="rental-games"><span th:each="item : ${aluguel.itensAluguel}" class="rental-game"><span th:text="${item.jogo.nome}"></span><small th:text="${'R$ ' + #numbers.formatDecimal(item.valorUnitarioCobrado, 1, 'POINT', 2, 'COMMA')}"></small></span></div>
+                <div class="rental-games"><span th:each="item : ${aluguel.itensAluguel}" class="rental-game"><span th:text="${item.jogo.titulo}"></span><small th:text="${'R$ ' + #numbers.formatDecimal(item.valorCobrado, 1, 'POINT', 2, 'COMMA')}"></small></span></div>
                 <div class="rental-meta">
-                    <span th:if="${aluguel.dataDevolucaoReal != null}">Devolvido em <strong th:text="${T(projeto.bdd2.dgmaster.util.DataFormatter).formatar(aluguel.dataDevolucaoReal)}"></strong></span>
-                    <span th:if="${aluguel.status.name() == 'EXPIRADO'}">Expirado em <strong th:text="${T(projeto.bdd2.dgmaster.util.DataFormatter).formatar(aluguel.dataLimiteRetirada)}"></strong></span>
-                    <span th:if="${aluguel.status.name() == 'CANCELADO'}">Cancelado</span>
+                    <span th:if="${aluguel.devolucaoEfetiva != null}">Devolvido em <strong th:text="${T(projeto.bdd2.dgmaster.util.DataFormatter).formatar(aluguel.devolucaoEfetiva)}"></strong></span>
+                    <span th:if="${aluguel.statusAluguel.name() == 'EXPIRADO'}">Expirado em <strong th:text="${T(projeto.bdd2.dgmaster.util.DataFormatter).formatar(aluguel.dataExpiracaoReserva)}"></strong></span>
+                    <span th:if="${aluguel.statusAluguel.name() == 'CANCELADO'}">Cancelado</span>
                     <span>Total <strong th:text="${'R$ ' + #numbers.formatDecimal(aluguel.valorTotal, 1, 'POINT', 2, 'COMMA')}"></strong></span>
                 </div>
             </article>
@@ -100,6 +97,7 @@
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                 <label>Nome<input name="nome" maxlength="150" required></label>
                 <label>Nascimento<input name="dataNascimento" type="date" required></label>
+                <label>Parentesco<input name="grauParentesco" maxlength="30" placeholder="Ex.: Filho(a)"></label>
                 <button class="button button-dark button-small" type="submit">Adicionar perfil</button>
             </form>
         </div>

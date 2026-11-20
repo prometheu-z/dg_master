@@ -18,9 +18,9 @@ import java.io.Serializable;
 @EqualsAndHashCode
 public class ItemAluguelId implements Serializable {
 
-    @Column(name = "jogo_codigo")
-    private Integer jogoCodigo;
+    @Column(name = "id_aluguel")
+    private Integer idAluguel;
 
-    @Column(name = "aluguel_id")
-    private Integer aluguelId;
+    @Column(name = "id_jogo")
+    private Integer idJogo;
 }
