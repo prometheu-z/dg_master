@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">Símbolo DG Master</title>
+  <rect x="2" y="2" width="60" height="60" rx="18" fill="#f4ecda"/>
+  <rect x="2" y="2" width="60" height="60" rx="18" fill="none" stroke="#e7dcc4" stroke-width="2"/>
+  <rect x="11" y="35" width="20" height="19" rx="6" fill="#e9c2b9"/>
+  <circle cx="17" cy="41" r="2" fill="#8d665e"/>
+  <circle cx="25" cy="48" r="2" fill="#8d665e"/>
+  <rect x="34" y="35" width="19" height="19" rx="6" fill="#d8e4d7"/>
+  <path d="M43.5 39.5v10M38.5 44.5h10" stroke="#54715d" stroke-linecap="round" stroke-width="3"/>
+  <circle cx="32" cy="20" r="7" fill="#829d88"/>
+  <path d="M22 32c0-5.5 4.4-9 10-9s10 3.5 10 9v4H22z" fill="#54715d"/>
+</svg>

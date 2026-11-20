@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 780" role="img" aria-labelledby="title">
+  <title id="title">Ilustração pastel de um tabuleiro de estratégia</title>
+  <rect width="1200" height="780" fill="#e7eee5"/>
+  <circle cx="180" cy="170" r="115" fill="#d4e0d1"/>
+  <circle cx="1040" cy="625" r="180" fill="#f3e7d4"/>
+  <g transform="rotate(-8 600 390)">
+    <rect x="260" y="130" width="680" height="520" rx="38" fill="#d4d9ce"/>
+    <rect x="240" y="110" width="680" height="520" rx="38" fill="#fbf8ef" stroke="#d7ddcf" stroke-width="8"/>
+    <g fill="#e7d9bb" stroke="#c7b998" stroke-width="5">
+      <rect x="292" y="160" width="126" height="126" rx="16"/>
+      <rect x="430" y="160" width="126" height="126" rx="16"/>
+      <rect x="568" y="160" width="126" height="126" rx="16"/>
+      <rect x="706" y="160" width="164" height="126" rx="16"/>
+      <rect x="292" y="298" width="164" height="126" rx="16"/>
+      <rect x="468" y="298" width="126" height="126" rx="16"/>
+      <rect x="606" y="298" width="126" height="126" rx="16"/>
+      <rect x="744" y="298" width="126" height="126" rx="16"/>
+      <rect x="292" y="436" width="126" height="142" rx="16"/>
+      <rect x="430" y="436" width="126" height="142" rx="16"/>
+      <rect x="568" y="436" width="164" height="142" rx="16"/>
+      <rect x="744" y="436" width="126" height="142" rx="16"/>
+    </g>
+    <path d="M355 220h138v140h200v140h-75" fill="none" stroke="#8ba995" stroke-linecap="round" stroke-linejoin="round" stroke-width="18" stroke-dasharray="2 28"/>
+    <circle cx="355" cy="220" r="32" fill="#c8897f"/>
+    <circle cx="493" cy="360" r="32" fill="#8099aa"/>
+    <circle cx="693" cy="360" r="32" fill="#d7b76f"/>
+    <circle cx="618" cy="500" r="32" fill="#8ba995"/>
+  </g>
+  <g transform="translate(890 110)">
+    <rect width="132" height="132" rx="28" fill="#f4e3df"/>
+    <circle cx="40" cy="40" r="10" fill="#b87970"/>
+    <circle cx="92" cy="40" r="10" fill="#b87970"/>
+    <circle cx="66" cy="66" r="10" fill="#b87970"/>
+    <circle cx="40" cy="92" r="10" fill="#b87970"/>
+    <circle cx="92" cy="92" r="10" fill="#b87970"/>
+  </g>
+</svg>

@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 780" role="img" aria-labelledby="title">
+  <title id="title">Ilustração pastel de jogadores cooperando em um tabuleiro</title>
+  <rect width="1200" height="780" fill="#e7eef0"/>
+  <circle cx="180" cy="140" r="120" fill="#d5e4e6"/>
+  <circle cx="1040" cy="640" r="190" fill="#f2e7d7"/>
+  <ellipse cx="600" cy="405" rx="375" ry="240" fill="#fbf8ef" stroke="#d5ddcf" stroke-width="9"/>
+  <g fill="none" stroke="#8ba995" stroke-width="14" stroke-linecap="round" stroke-dasharray="1 27">
+    <path d="M375 300c125 36 198 88 225 160"/>
+    <path d="M825 300c-125 36-198 88-225 160"/>
+    <path d="M375 500c125-36 198-88 225-160"/>
+    <path d="M825 500c-125-36-198-88-225-160"/>
+  </g>
+  <g transform="translate(310 205)">
+    <circle cx="58" cy="48" r="34" fill="#c8897f"/>
+    <path d="M10 150c0-35 22-60 48-60s48 25 48 60v18H10z" fill="#c8897f"/>
+  </g>
+  <g transform="translate(770 205)">
+    <circle cx="58" cy="48" r="34" fill="#8099aa"/>
+    <path d="M10 150c0-35 22-60 48-60s48 25 48 60v18H10z" fill="#8099aa"/>
+  </g>
+  <g transform="translate(310 435)">
+    <circle cx="58" cy="48" r="34" fill="#d7b76f"/>
+    <path d="M10 150c0-35 22-60 48-60s48 25 48 60v18H10z" fill="#d7b76f"/>
+  </g>
+  <g transform="translate(770 435)">
+    <circle cx="58" cy="48" r="34" fill="#8ba995"/>
+    <path d="M10 150c0-35 22-60 48-60s48 25 48 60v18H10z" fill="#8ba995"/>
+  </g>
+  <g transform="translate(500 300)">
+    <rect width="200" height="200" rx="30" fill="#e8e0cb" stroke="#d0c4aa" stroke-width="7"/>
+    <path d="M66 0v200M134 0v200M0 66h200M0 134h200" stroke="#d0c4aa" stroke-width="6"/>
+    <circle cx="66" cy="66" r="18" fill="#c8897f"/>
+    <circle cx="134" cy="134" r="18" fill="#8099aa"/>
+    <circle cx="66" cy="134" r="18" fill="#8ba995"/>
+  </g>
+</svg>

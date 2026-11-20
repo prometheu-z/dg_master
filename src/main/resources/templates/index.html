@@ -8,67 +8,80 @@
 </head>
 <body>
 <header class="topbar">
-    <a class="brand" th:href="@{/}"><span class="brand-mark"><img src="/img/logo_dgMaster.png" alt="DG Master"></span><span>DG MASTER</span></a>
-    <nav class="nav-actions">
+    <a class="brand" th:href="@{/}">
+        <span class="brand-mark"><img src="/img/logo-dg-master.svg" alt=""></span>
+        <span>DG MASTER</span>
+    </a>
+    <nav class="nav-actions" aria-label="Navegação principal">
         <a class="nav-link" th:href="@{/catalogo}">Catálogo</a>
-        <a class="nav-link" th:href="@{/login}">Entrar</a>
-        <a class="button button-gold button-small" th:href="@{/cadastro}">Criar conta</a>
+        <a class="nav-link" th:if="${cliente}" th:href="@{/cliente}">Minha conta</a>
+        <a class="nav-link" th:if="${principal != null and principal.tipo == 'GERENTE'}" th:href="@{/gerente}">Gestão</a>
+        <a class="nav-link" th:if="${principal == null}" th:href="@{/login}">Entrar</a>
+        <a class="button button-gold button-small" th:if="${principal == null}" th:href="@{/cadastro}">Criar conta</a>
+        <form th:if="${principal != null}" th:action="@{/logout}" method="post" class="inline-form">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button class="button button-outline button-small" type="submit">Sair</button>
+        </form>
     </nav>
 </header>
 
-<main class="page-shell">
-    <!-- Hero -->
-    <section class="catalog-intro" style="padding-top: 100px; padding-bottom: 70px; border-bottom: none;">
-        <div>
-            <p class="eyebrow">CLUBE DE JOGOS DE TABULEIRO <span class="eyebrow-dot"></span> APRESENTAÇÃO</p>
+<main class="page-shell home-shell">
+    <section class="home-hero">
+        <div class="home-hero-copy">
+            <p class="eyebrow">CLUBE DE JOGOS DE TABULEIRO <span class="eyebrow-dot"></span> DG MASTER</p>
             <h1>A próxima noite de jogo começa <em>aqui</em>.</h1>
-            <p class="intro-copy">Explore nosso acervo físico, reserve para a família, retire na loja e devolva no prazo — tudo em um só lugar, feito para ser acolhedor.</p>
-            <div style="margin-top: 28px; display: flex; gap: 14px; flex-wrap: wrap;">
-                <a class="button button-primary" th:href="@{/catalogo}" style="font-size: 15px; min-height: 52px; padding: 0 28px; border-radius: 16px;">Ver Catálogo de Jogos</a>
-                <a class="button button-outline" th:href="@{/login}" style="font-size: 15px; min-height: 52px; padding: 0 28px; border-radius: 16px;">Entrar / Cadastrar</a>
+            <p class="intro-copy">Descubra o jogo certo para reunir todo mundo. Reserve online, retire na loja e aproveite a partida.</p>
+            <div class="hero-actions">
+                <a class="button button-primary" th:href="@{/catalogo}">Explorar o catálogo <span aria-hidden="true">→</span></a>
+                <a class="button button-outline" th:if="${cliente}" th:href="@{/cliente}">Ver meus aluguéis</a>
+                <a class="button button-outline" th:if="${principal != null and principal.tipo == 'GERENTE'}" th:href="@{/gerente}">Abrir painel de gestão</a>
+                <a class="button button-outline" th:if="${principal == null}" th:href="@{/login}">Entrar na minha conta</a>
+            </div>
+            <div class="hero-promise">
+                <span class="hero-promise-mark" aria-hidden="true">✦</span>
+                <span><strong>Até 4 jogos por titular</strong><br>Retire, jogue e devolva no prazo.</span>
             </div>
         </div>
-        <div class="intro-index" style="min-width: 220px; padding: 28px; border-left-color: var(--gold); background: var(--surface); border-radius: var(--radius-xl); box-shadow: var(--shadow-card);">
-            <span>01 — 04</span>
-            <strong>Até 4 jogos<br>por titular</strong>
-            <span style="margin-top: 10px;">Retire, jogue, devolva.</span>
-        </div>
+        <figure class="home-hero-art">
+            <img src="/img/hero-mesa.webp" alt="Pessoas reunidas em volta de uma mesa para jogar" fetchpriority="high">
+            <figcaption><span>Uma boa partida começa</span><strong>com todo mundo à mesa.</strong></figcaption>
+        </figure>
     </section>
 
-    <!-- Hero Placeholder Banner -->
-    <section class="section-block" style="padding: 0; border: none; background: transparent; box-shadow: none; margin-bottom: 32px;">
-        <img src="/img/principal.webp" alt="Mesa de jogos DG Master" style="width: 100%; max-height: 480px; object-fit: contain; display: block; border-radius: var(--radius-xl);">
-    </section>
-
-    <!-- Sobre -->
-    <section class="section-block">
-        <div class="section-title" style="align-items: flex-start; flex-direction: column; gap: 8px;">
+    <section class="home-about section-block">
+        <div class="section-title home-section-title">
             <div>
                 <p class="eyebrow">SOBRE A DG MASTER</p>
-                <h2>Um lugar feito para reunir mesas e histórias.</h2>
+                <h2>Menos tempo escolhendo.<br><em>Mais tempo jogando.</em></h2>
             </div>
+            <p class="home-about-copy">Uma loja física dedicada ao aluguel de jogos de tabuleiro. Nosso acervo foi feito para criar encontros, boas histórias e aquela vontade de jogar mais uma.</p>
         </div>
-        <p class="intro-copy" style="max-width: 720px; font-size: 16px;">A DG Master é uma loja física dedicada ao aluguel de jogos de tabuleiro. Nosso propósito é simples: criar oportunidades de encontro, riso e estratégia. Cada jogo é escolhido para ser descoberto junto — seja em uma partida rápida ou numa noite longa de replay.</p>
-
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 22px; margin-top: 28px;">
-            <img src="/img/img1.jpeg" alt="Ambiente DG Master" style="width:100%;height:220px;object-fit:cover;border-radius:var(--radius-lg);display:block;">
-            <img src="/img/img2.jpeg" alt="Mesa DG Master" style="width:100%;height:220px;object-fit:cover;border-radius:var(--radius-lg);display:block;">
-            <img src="/img/img3.jpeg" alt="Detalhe DG Master" style="width:100%;height:220px;object-fit:cover;border-radius:var(--radius-lg);display:block;">
+        <div class="story-gallery">
+            <figure class="story-gallery-feature">
+                <img src="/img/capa-cooperativo.svg" alt="" loading="lazy">
+                <figcaption>Boas histórias acontecem em grupo.</figcaption>
+            </figure>
+            <figure>
+                <img src="/img/capa-estrategia.svg" alt="" loading="lazy">
+                <figcaption>Um acervo para descobrir.</figcaption>
+            </figure>
+            <figure>
+                <img src="/img/capa-familia.svg" alt="" loading="lazy">
+                <figcaption>Uma mesa para cada momento.</figcaption>
+            </figure>
         </div>
     </section>
 
-    <!-- CTA Section -->
-    <section class="section-block" style="background: linear-gradient(135deg, #0a3d62 0%, #0A84FF 100%); color: #fff;">
-        <div style="display: flex; align-items: center; justify-content: space-between; gap: 28px; flex-wrap: wrap;">
-            <div>
-                <h2 style="color: #fff; font-size: clamp(28px, 3.5vw, 42px);">Pronto para sua próxima mesa?</h2>
-                <p style="color: rgba(255,255,255,0.85); margin: 8px 0 0; font-size: 15px;">Escolha jogos, reserve para a família e aproveite o acervo.</p>
-            </div>
-            <a class="button button-gold" th:href="@{/catalogo}" style="font-size: 15px; min-height: 52px; padding: 0 28px; border-radius: 16px;">Ver Catálogo</a>
+    <section class="home-cta">
+        <div>
+            <p class="eyebrow">SUA PRÓXIMA PARTIDA ESTÁ AQUI</p>
+            <h2>Qual vai ser o jogo de hoje?</h2>
+            <p>Encontre uma nova experiência para compartilhar com quem você gosta.</p>
         </div>
+        <a class="button button-gold" th:href="@{/catalogo}">Ver todos os jogos <span aria-hidden="true">→</span></a>
     </section>
 </main>
 
-<footer class="site-footer"><span>DG MASTER</span><span>Clube de jogos de tabuleiro.</span></footer>
+<footer class="site-footer"><span>DG MASTER</span><span>Jogos de tabuleiro para a sua próxima reunião.</span></footer>
 </body>
 </html>

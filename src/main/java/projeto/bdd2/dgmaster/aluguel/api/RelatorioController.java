@@ -1,10 +1,10 @@
 package projeto.bdd2.dgmaster.aluguel.api;
 
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import projeto.bdd2.dgmaster.service.RelatorioService;
 
 import java.util.List;
 import java.util.Map;
@@ -18,35 +18,34 @@ import java.util.Map;
 @PreAuthorize("hasRole('GERENTE')")
 public class RelatorioController {
 
-    private final JdbcTemplate jdbcTemplate;
+    private final RelatorioService relatorioService;
 
-    public RelatorioController(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
+    public RelatorioController(RelatorioService relatorioService) {
+        this.relatorioService = relatorioService;
     }
 
     @GetMapping("/alugueis")
     public List<Map<String, Object>> relatorioAlugueis() {
-        return jdbcTemplate.queryForList("SELECT * FROM vw_relatorio_alugueis");
+        return relatorioService.listarAlugueis();
     }
 
     @GetMapping("/jogos-mais-alugados")
     public List<Map<String, Object>> jogosMaisAlugados() {
-        return jdbcTemplate.queryForList("SELECT * FROM vw_jogos_mais_alugados");
+        return relatorioService.listarJogosMaisAlugados();
     }
 
     @GetMapping("/faturamento-categoria")
     public List<Map<String, Object>> faturamentoCategoria() {
-        return jdbcTemplate.queryForList("SELECT * FROM vw_faturamento_categoria");
+        return relatorioService.listarFaturamentoPorCategoria();
     }
 
     @GetMapping("/penalidades-pendentes")
     public List<Map<String, Object>> penalidadesPendentes() {
-        return jdbcTemplate.queryForList("SELECT * FROM vw_penalidades_pendentes");
+        return relatorioService.listarPenalidadesPendentes();
     }
 
     @GetMapping("/auditoria")
     public List<Map<String, Object>> auditoria() {
-        return jdbcTemplate.queryForList(
-                "SELECT * FROM log_auditoria ORDER BY id_log DESC LIMIT 200");
+        return relatorioService.listarAuditoria();
     }
 }

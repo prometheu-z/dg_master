@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 780" role="img" aria-labelledby="title">
+  <title id="title">Ilustração abstrata de peças de jogos de tabuleiro</title>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f0dfd2"/>
+      <stop offset="1" stop-color="#e4c6bf"/>
+    </linearGradient>
+    <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fffaf0"/>
+      <stop offset="1" stop-color="#e8dfc9"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="780" fill="url(#background)"/>
+  <circle cx="1020" cy="130" r="220" fill="#e4d4b8" opacity=".65"/>
+  <circle cx="180" cy="680" r="250" fill="#d3ded0" opacity=".7"/>
+  <g transform="rotate(-12 575 400)">
+    <rect x="235" y="185" width="730" height="440" rx="50" fill="#837b6d" opacity=".14"/>
+    <rect x="210" y="155" width="730" height="440" rx="50" fill="url(#tile)"/>
+    <path d="M575 155v440M210 375h730" stroke="#c8bda7" stroke-width="16" opacity=".8"/>
+    <rect x="265" y="210" width="210" height="125" rx="24" fill="#a9bda9"/>
+    <rect x="630" y="415" width="250" height="120" rx="24" fill="#e5cd98"/>
+    <circle cx="800" cy="280" r="55" fill="#d5a39a"/>
+    <g fill="#f8f2df">
+      <circle cx="327" cy="250" r="13"/><circle cx="412" cy="250" r="13"/>
+      <circle cx="327" cy="295" r="13"/><circle cx="412" cy="295" r="13"/>
+    </g>
+    <g fill="#fbf8ef">
+      <path d="M515 460c0-25 20-45 45-45s45 20 45 45v34h-90z" fill="#829d88"/>
+      <circle cx="560" cy="390" r="28" fill="#829d88"/>
+    </g>
+    <path d="M697 465h116M697 495h70" stroke="#fff3d4" stroke-linecap="round" stroke-width="14" opacity=".8"/>
+  </g>
+  <g fill="#fbf6e8" opacity=".92">
+    <circle cx="105" cy="150" r="18"/><circle cx="1080" cy="590" r="22"/>
+    <path d="M1035 350l18-42 18 42 42 18-42 18-18 42-18-42-42-18z"/>
+  </g>
+</svg>

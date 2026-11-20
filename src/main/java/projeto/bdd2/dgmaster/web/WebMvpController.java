@@ -64,7 +64,9 @@ public class WebMvpController {
     }
 
     @GetMapping("/")
-    public String inicio(@AuthenticationPrincipal UserPrincipal principal) {
+    public String inicio(@AuthenticationPrincipal UserPrincipal principal, Model model) {
+        model.addAttribute("principal", principal);
+        model.addAttribute("cliente", principal != null && "CLIENTE".equals(principal.getTipo()));
         return "index";
     }
 

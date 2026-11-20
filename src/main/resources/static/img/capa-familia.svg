@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 780" role="img" aria-labelledby="title">
+  <title id="title">Ilustração pastel de peças e cartas para jogar em família</title>
+  <rect width="1200" height="780" fill="#f5e9dd"/>
+  <circle cx="1020" cy="150" r="190" fill="#f0ddca"/>
+  <circle cx="150" cy="690" r="235" fill="#e5ddd0"/>
+  <ellipse cx="600" cy="420" rx="390" ry="250" fill="#e2ecdf"/>
+  <ellipse cx="600" cy="410" rx="340" ry="205" fill="#fbf8ef" stroke="#d5ddcf" stroke-width="8"/>
+  <path d="M380 410c95-118 345-118 440 0-95 118-345 118-440 0z" fill="#e8e0cb"/>
+  <path d="M454 410h292M600 300v220" stroke="#c9bea4" stroke-width="10" stroke-linecap="round"/>
+  <g transform="translate(420 185)">
+    <circle cx="55" cy="45" r="34" fill="#c8897f"/>
+    <path d="M8 145c0-34 21-58 47-58s47 24 47 58v18H8z" fill="#c8897f"/>
+  </g>
+  <g transform="translate(690 205)">
+    <circle cx="55" cy="45" r="34" fill="#8099aa"/>
+    <path d="M8 145c0-34 21-58 47-58s47 24 47 58v18H8z" fill="#8099aa"/>
+  </g>
+  <g transform="translate(545 490)">
+    <circle cx="55" cy="45" r="34" fill="#8ba995"/>
+    <path d="M8 145c0-34 21-58 47-58s47 24 47 58v18H8z" fill="#8ba995"/>
+  </g>
+  <g transform="rotate(12 315 530)">
+    <rect x="220" y="455" width="132" height="172" rx="20" fill="#fffdf7" stroke="#d7ccba" stroke-width="7"/>
+    <circle cx="286" cy="520" r="28" fill="#e2bd77"/>
+    <path d="M250 570h72" stroke="#bba984" stroke-width="10" stroke-linecap="round"/>
+  </g>
+  <g transform="rotate(-12 875 530)">
+    <rect x="845" y="455" width="132" height="172" rx="20" fill="#fffdf7" stroke="#d7ccba" stroke-width="7"/>
+    <circle cx="911" cy="520" r="28" fill="#d9a39a"/>
+    <path d="M875 570h72" stroke="#bba984" stroke-width="10" stroke-linecap="round"/>
+  </g>
+</svg>
